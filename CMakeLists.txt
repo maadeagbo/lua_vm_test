@@ -49,11 +49,13 @@ if(HAS_CNEW)
 endif()
 
 # include directories for project
-find_path(LUA_PATH lua.hpp
-	PATHS
-	${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include)
-if(NOT LUA_PATH)
-	message(FATAL_ERROR "Lua includes not found")
+if (MSVC)
+	find_path(LUA_PATH lua.hpp
+		PATHS
+		${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include)
+	if(NOT LUA_PATH)
+		message(FATAL_ERROR "Lua includes not found")
+	endif()
 endif()
 
 # use the file(GLOB...) or file(GLOB_RECURSE...) to grab wildcard src files
