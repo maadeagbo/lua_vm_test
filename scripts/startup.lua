@@ -25,9 +25,11 @@ function generate_levels( event, args, num_args )
 
     num_lvls = 0; dir_str = ""
     if (event == "io" and num_args == 1) then
+		print(k, v)
         for k,v in pairs(args) do dir_str = v end -- grab file location
     end
-    for i,v in ipairs(inputs) do
+    for i,v in pairs(inputs) do
+		print(i, v)
         filename = string.format( "%s%s.lua", tostring(dir_str), v)
         _file = io.open(filename)
         -- add to output if found
