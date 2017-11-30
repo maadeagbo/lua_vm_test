@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
+
+# modify some ompiler options
 project (lua_vm)
 
 # set release or debug builds
@@ -90,6 +92,10 @@ endforeach()
 include_directories(${CMAKE_SOURCE_DIR}/include ${LUA_PATH})
 
 add_executable(lua_vm ${SOURCES} ${PROJECT_SOURCES})
+if(MSVC)
+	# set stack size
+	set_property(TARGET lua_vm APPEND PROPERTY LINK_FLAGS /STACK:2000000)
+endif()
 
 # set visual studio startup project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -102,6 +108,7 @@ if (UNIX)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -lstdc++fs")
 endif()
 
+# add library
 if (MSVC)
 	find_library(LUA_LIB lua53 ${CMAKE_CURRENT_SOURCE_DIR}/lua53_Win64_lib)
 	if(NOT LUA_LIB)
