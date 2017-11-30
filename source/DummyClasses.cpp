@@ -23,6 +23,7 @@ bool DD_SimpleQueue::push(DD_LEvent &levent)
 int DD_ResourceBin::add_new_agent(lua_State* L)
 {
 	parse_lua_events(L, cb_events);
+	print_callbackbuff(cb_events);
 	int a_idx = num_agents;
 	// check if agent exists then do add procedure
 	if (cb_events.num_events == 1 && 

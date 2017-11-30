@@ -10,7 +10,19 @@ do
         enemies = {}
     }
 
-    function DeadWorld:Generate( map )
+    function DeadWorld:init( map )
+		-- spawn hero
+		print("Deadworld init called")
+		main_hero = hero_script:new()
+		main_hero.name = "Bob"
+		main_hero.position = { 0.0, 1.0, -2.0 }
+		e = {}
+		e["event_id"] = "agent_creation"
+		e["agent.name"] = main_hero.name
+		e["agent.pos.x"] = main_hero.position[1]
+		e["agent.pos.y"] = main_hero.position[2]
+		e["agent.pos.z"] = main_hero.position[3]
+		res_new_agent(e)
         -- spawn some monsters
         for i=1,5 do
             new_name = string.format("monster_%d",i)

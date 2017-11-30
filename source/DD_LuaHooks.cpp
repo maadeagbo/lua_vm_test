@@ -187,7 +187,6 @@ void callback_lua(lua_State *L,
 		}
 	}
 	lua_pushinteger(L, (int)levent.active);	// push # of arguments
-	stack_dump(L);
 
 	// call function
 	int num_args = lclass_flag ? 4 : 3;

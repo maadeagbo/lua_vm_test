@@ -7,17 +7,6 @@ local inputs =
 }
 
 function generate_levels( event, args, num_args )
-    -- register new agent on cpp side
-    main_hero = hero_script:new()
-    main_hero.name = "Bob"
-    main_hero.position = { 0.0, 1.0, -2.0 }
-    e = {}
-    e["event_id"] = "agent_creation"
-    e["agent.name"] = main_hero.name
-    e["agent.pos.x"] = main_hero.position[1]
-    e["agent.pos.y"] = main_hero.position[2]
-    e["agent.pos.z"] = main_hero.position[3]
-    res_new_agent(e)
 
     -- create a list of valid levels
     levels = {}
@@ -25,11 +14,11 @@ function generate_levels( event, args, num_args )
 
     num_lvls = 0; dir_str = ""
     if (event == "io" and num_args == 1) then
-		print(k, v)
-        for k,v in pairs(args) do dir_str = v end -- grab file location
+        for k,v in pairs(args) do 
+			dir_str = v -- grab file location
+		end 
     end
     for i,v in pairs(inputs) do
-		print(i, v)
         filename = string.format( "%s%s.lua", tostring(dir_str), v)
         _file = io.open(filename)
         -- add to output if found

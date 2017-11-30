@@ -40,7 +40,7 @@ int main(const int argv, const char** argc)
 			// attempt to read lua script then execute
 			parse_luafile(L, argc[i]);
 			cbuff<256> dir;
-			dir.format("%s%s", ROOT_DIR, "scripts");
+			dir.format("%s%s", ROOT_DIR, "scripts/");
 			run_startup(L, dir.str(), &simple_q);
 		}
 	}
@@ -65,7 +65,6 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 	levent.args[0].val.type = VType::STRING;
 	levent.args[0].val.v_strptr = dir;
 	levent.active++;
-	stack_dump(L);
 
 	callback_lua(L, "", "generate_levels", levent, _q->cb_events);
 	print_callbackbuff(_q->cb_events);
@@ -84,20 +83,17 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 			}
 		}
 	}
-	stack_dump(L);
 	
 	if (!(*lvl_found.str()) || lvl_found.compare(" ") == 0) { return; }
 	clear_callbackbuff(_q->cb_events);
 	// reuse event to test update
 	levent.handle = "post";
-	levent.args[0].key = "check";
-	levent.args[0].val.type = VType::STRING;
-	levent.args[0].val.v_strptr = "bang";
+	levent.active = 0;
 
-	file_.format("/home/maadeagbo/Documents/lua_vm_test/scripts/%s.lua", 
-				 lvl_found.str());
+	file_.format("%s%s%s.lua", ROOT_DIR, "scripts/", lvl_found.str());
 	parse_luafile(L, file_.str());
 
+	callback_lua(L, lvl_found.str(), "init", levent, _q->cb_events);
 	callback_lua(L, lvl_found.str(), "update", levent, _q->cb_events);
 	print_callbackbuff(_q->cb_events);
 }
