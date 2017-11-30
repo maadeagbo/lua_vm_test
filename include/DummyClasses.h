@@ -37,16 +37,10 @@ struct DD_ResourceBin
     int add_new_agent(lua_State* L);
 };
 
-// typedef int (DD_ResourceBin::*mem_func)(lua_State * L);
+/// \brief Prints all agent infromation
+void print_all_agents(DD_ResourceBin &resbin);
 
-// // This template wraps a member function into a C-style "free" function compatible with lua.
-// template <mem_func func>
-// int dispatch(lua_State * L) 
-// {
-//     DD_ResourceBin *ptr = *static_cast<DD_ResourceBin**>(lua_getextraspace(L));
-//     return ((*ptr).*func)(L);
-// }
-
+// This template wraps a member function into a C-style "free" function compatible with lua.
 template <typename T, int (T::*f)(lua_State *L)>
 int dispatch_(lua_State * L) 
 {

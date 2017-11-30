@@ -42,6 +42,8 @@ int main(const int argv, const char** argc)
 			cbuff<256> dir;
 			dir.format("%s%s", ROOT_DIR, "scripts/");
 			run_startup(L, dir.str(), &simple_q);
+
+			print_all_agents(res_bin);
 		}
 	}
 	lua_close(L);
@@ -94,6 +96,7 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 	parse_luafile(L, file_.str());
 
 	callback_lua(L, lvl_found.str(), "init", levent, _q->cb_events);
+	clear_callbackbuff(_q->cb_events);
 	callback_lua(L, lvl_found.str(), "update", levent, _q->cb_events);
-	print_callbackbuff(_q->cb_events);
+	clear_callbackbuff(_q->cb_events);
 }

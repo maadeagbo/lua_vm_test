@@ -23,7 +23,6 @@ bool DD_SimpleQueue::push(DD_LEvent &levent)
 int DD_ResourceBin::add_new_agent(lua_State* L)
 {
 	parse_lua_events(L, cb_events);
-	print_callbackbuff(cb_events);
 	int a_idx = num_agents;
 	// check if agent exists then do add procedure
 	if (cb_events.num_events == 1 && 
@@ -38,6 +37,8 @@ int DD_ResourceBin::add_new_agent(lua_State* L)
 					if (k->compare("agent.name") == 0) { 
 						agents[a_idx].name = v->v_strptr.str();
 					}
+					num_agents += 1;
+					break;
 				case VType::FLOAT:
 					if (k->compare("agent.pos.x") == 0) {
 						agents[a_idx].position[0] = v->v_float;
@@ -59,5 +60,18 @@ int DD_ResourceBin::add_new_agent(lua_State* L)
 			}
 		}
 	}
+	clear_callbackbuff(cb_events);
 	return 0;
+}
+
+void print_all_agents(DD_ResourceBin &resbin)
+{
+	for (unsigned i = 0; i < resbin.num_agents; i++) {
+		printf("Agent name: %s\n", resbin.agents[i].name.str());
+		printf("\tpos: %.3f, %.3f, %.3f\n", 
+			   resbin.agents[i].position[0],
+			   resbin.agents[i].position[1],
+			   resbin.agents[i].position[2]);
+		printf("\talive: %s\n", resbin.agents[i].alive ? "true" : "false");
+	}
 }
