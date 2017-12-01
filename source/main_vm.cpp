@@ -103,6 +103,10 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 	int func_ref = get_lua_ref(L, lvl_found.str(), "update");
 	printf("Global ref <%d>, Func ref : %d\n", class_ref, func_ref);
 
+	levent.args[0].key = "test_float";
+	levent.args[0].val.type = VType::FLOAT;
+	levent.args[0].val.v_float = 151515.f;
+	levent.active++;
 	callback_lua(L, levent, _q->cb_events, func_ref, class_ref);
 	print_callbackbuff(_q->cb_events);
 	clear_callbackbuff(_q->cb_events);

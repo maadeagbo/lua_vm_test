@@ -47,10 +47,10 @@ do
     function DeadWorld:update( event, args, num_args )
         if event == "post" then
             for k,v in pairs(args) do
-                if k == "test_float" then print(v) end
+                if k == "test_float" then print("Deadworld out val: "..v) end
             end
             e = {}
-            e["event_id"] = "DeadWorld post called"
+            e["event_id"] = "DeadWorld post called\n"
             return e
         end
         return { 0 }
