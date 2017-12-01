@@ -68,7 +68,7 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 	levent.args[0].val.v_strptr = dir;
 	levent.active++;
 
-	callback_lua(L, "", "generate_levels", levent, _q->cb_events);
+	callback_lua(L, levent, _q->cb_events, "generate_levels");
 	print_callbackbuff(_q->cb_events);
 	if (_q->cb_events.num_events == 1 && 
 		_q->cb_events.buffer[0].handle.compare("lvls_found") == 0) {
@@ -93,10 +93,17 @@ void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
 	levent.active = 0;
 
 	file_.format("%s%s%s.lua", ROOT_DIR, "scripts/", lvl_found.str());
-	parse_luafile(L, file_.str());
+	bool file_found = parse_luafile(L, file_.str());
+	if (!file_found) { return; }
 
-	callback_lua(L, lvl_found.str(), "init", levent, _q->cb_events);
+	callback_lua(L, levent, _q->cb_events, "init", lvl_found.str());
 	clear_callbackbuff(_q->cb_events);
-	callback_lua(L, lvl_found.str(), "update", levent, _q->cb_events);
+	
+	int class_ref = get_lua_ref(L, "", lvl_found.str());
+	int func_ref = get_lua_ref(L, lvl_found.str(), "update");
+	printf("Global ref <%d>, Func ref : %d\n", class_ref, func_ref);
+
+	callback_lua(L, levent, _q->cb_events, func_ref, class_ref);
+	print_callbackbuff(_q->cb_events);
 	clear_callbackbuff(_q->cb_events);
 }

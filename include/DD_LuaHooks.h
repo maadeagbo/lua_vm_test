@@ -90,18 +90,28 @@ void register_instance_lua_xspace(lua_State *L, T &instance)
 	*static_cast<T**>(lua_getextraspace(L)) = &instance;
 }
 
+/// \brief Check lua stack value for nil (returns true if nil)
+bool check_stack_nil(lua_State *L, int idx);
+
 /// \brief Register class function w/ dispatch template
 void register_callback_lua(lua_State *L, const char* func_sig, lua_CFunction _func);
 
 /// \brief Read and execute lua script file
-void parse_luafile(lua_State *L, const char* filename);
+bool parse_luafile(lua_State *L, const char* filename);
 
 /// \brief Envoke lua callback function and return event
 void callback_lua(lua_State *L,
-				  const char *lclass,
-				  const char *func,
 				  const DD_LEvent &event,
-				  DD_CallBackBuff &cb);
+				  DD_CallBackBuff &cb,
+				  const char *func,
+				  const char *lclass = "");
+
+/// \brief Envoke lua callback function with lua_ref pointer
+void callback_lua(lua_State *L,
+				  const DD_LEvent &event,
+				  DD_CallBackBuff &cb,
+				  int func_ref,
+				  int global_ref = LUA_REFNIL);
 
 /// \brief Push event arguments onto the stack
 void push_args(lua_State *L, const DD_LEvent &levent, const int idx);
@@ -123,3 +133,9 @@ void print_table(lua_State *L, const int tabs = 0);
 
 /// \brief Print out contents of DD_CallbackBuff
 void print_callbackbuff(DD_CallBackBuff &cb);
+
+/// \brief Store and return handle to lua function
+int get_lua_ref(lua_State *L, const char *lclass, const char *func);
+
+/// \brief Clear function reference
+void clear_lua_ref(lua_State *L, int func_ref);

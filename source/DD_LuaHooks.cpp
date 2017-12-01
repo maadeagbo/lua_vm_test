@@ -60,8 +60,14 @@ void clear_callbackbuff(DD_CallBackBuff &cb)
 	cb.num_events = 0;
 }
 
-void parse_luafile(lua_State *L, const char* filename)
+bool check_stack_nil(lua_State *L, int idx) {
+	if (lua_type(L, idx) == LUA_TNIL) { return true; }
+	return false;
+}
+
+bool parse_luafile(lua_State *L, const char* filename)
 {
+	int err_num = 0;
 	/// \brief quick print out error func
 	auto handle_error = [&]() {
 		fprintf(stderr, "%s\n", lua_tostring(L, -1));
@@ -72,11 +78,17 @@ void parse_luafile(lua_State *L, const char* filename)
 	if (!file.contains(".lua")) { 
 		printf("Invalid file type <%s>\n", file.str());
 	}
-	// open file and check for errors
-	int err_num = 0;
+
 	// read file then execute
-	if ((err_num = luaL_loadfile(L, filename)) != 0) { handle_error(); }
-	if ((err_num = lua_pcall(L, 0, 0, 0)) != 0) { handle_error(); }
+	if ((err_num = luaL_loadfile(L, filename)) != 0) { 
+		handle_error(); 
+		return false;
+	}
+	if ((err_num = lua_pcall(L, 0, 0, 0)) != 0) { 
+		handle_error();
+		return false;
+	}
+	return true;
 }
 
 void push_args(lua_State *L, const DD_LEvent &levent, const int idx)
@@ -153,10 +165,10 @@ void register_callback_lua(lua_State *L, const char* func_sig, lua_CFunction _fu
 }
 
 void callback_lua(lua_State *L,
-				  const char *lclass,
-				  const char *func,
 				  const DD_LEvent &levent,
-				  DD_CallBackBuff &cb)
+				  DD_CallBackBuff &cb,
+				  const char *func,
+				  const char *lclass)
 {
 	/// \brief quick print out error func
 	int err_num = 0;
@@ -169,13 +181,26 @@ void callback_lua(lua_State *L,
 	bool lclass_flag = lclass && *lclass;
 
 	// find lua class, func, and set class as argument (self)
+	// return if function or class doesn't exist
 	if (lclass_flag) {
 		lua_getglobal(L, lclass);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> class doesn't exist.\n", lclass);
+			return;
+		}
 		lua_getfield(L, -1, func);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> : <%s> function doesn't exist.\n", lclass, func);
+			return;
+		}
 		lua_rotate(L, 1, -1);
 	}
 	else { // find global function
 		lua_getglobal(L, func);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> global function doesn't exist.\n", func);
+			return;
+		}
 	}
 
 	// push event arguments (in the form of a table)
@@ -190,6 +215,60 @@ void callback_lua(lua_State *L,
 
 	// call function
 	int num_args = lclass_flag ? 4 : 3;
+	if ((err_num = lua_pcall(L, num_args, LUA_MULTRET, 0)) != 0) { handle_error(); }
+
+	// get returned events and fill buffer
+	parse_callbacks(L, cb);
+}
+
+void callback_lua(lua_State *L,
+				  const DD_LEvent &levent,
+				  DD_CallBackBuff &cb,
+				  int func_ref,
+				  int global_ref)
+{
+	/// \brief quick print out error func
+	int err_num = 0;
+	auto handle_error = [&]() {
+		fprintf(stderr, "callback_lua::%s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
+	};
+
+    DD_LEvent out;
+
+	// retrieve function
+	if (global_ref) {
+		lua_rawgeti(L, LUA_REGISTRYINDEX, func_ref);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%d> class function doesn't exist.\n", func_ref);
+			return;
+		}
+		lua_rawgeti(L, LUA_REGISTRYINDEX, global_ref);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%d> global doesn't exist.\n", global_ref);
+			return;
+		}
+	}
+	else { // find global function
+		lua_rawgeti(L, LUA_REGISTRYINDEX, func_ref);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%d> global function doesn't exist.\n", func_ref);
+			return;
+		}
+	}
+
+	// push event arguments (in the form of a table)
+	lua_pushstring(L, levent.handle.str());			// push event handle
+	lua_newtable(L); 		// create new table and put on top of stack
+	if (levent.active > 0) {
+		for (unsigned i = 0; i < levent.active; i++) {
+			push_args(L, levent, i + 1);			// push arguments
+		}
+	}
+	lua_pushinteger(L, (int)levent.active);	// push # of arguments
+
+	// call function
+	int num_args = global_ref ? 4 : 3;
 	if ((err_num = lua_pcall(L, num_args, LUA_MULTRET, 0)) != 0) { handle_error(); }
 
 	// get returned events and fill buffer
@@ -371,4 +450,47 @@ void print_table(lua_State *L, const int tabs)
         lua_pop(L, 1); // remove value
 	}
 	//printf("<--%d\t", tabs); stack_dump(L);			// check exit
+}
+
+int get_lua_ref(lua_State *L, const char *lclass, const char *func)
+{
+	bool lclass_flag = lclass && *lclass;
+	bool not_found = true;
+
+	if (lclass_flag) { // find class function
+		lua_getglobal(L, lclass);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> global doesn't exist.\n", lclass);
+		}
+
+		lua_getfield(L, -1, func);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> : <%s> function doesn't exist.\n", lclass, func);
+		}
+		else {
+			// remove global table from stack once class function found
+			lua_rotate(L, 1, -1);
+			lua_pop(L, 1);
+		}
+	}
+	else { // find global
+		lua_getglobal(L, func);
+		if (check_stack_nil(L, -1)) { 
+			printf("<%s> global function/class doesn't exist.\n", func);
+		}
+	}
+
+	int t = lua_type(L, -1);
+	if (t == LUA_TFUNCTION || t == LUA_TTABLE) {
+    	return luaL_ref(L, LUA_REGISTRYINDEX); 		// store reference
+	}
+	else {
+		lua_pop(L, 1);								// remove nil from stack
+	}
+	return LUA_REFNIL;
+}
+
+void clear_lua_func(lua_State *L, int func_ref)
+{
+	luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
 }
