@@ -51,6 +51,78 @@ bool add_arg_LEvent<const char*> (DD_LEvent* levent, const char* key, const char
 	return true;
 }
 
+template<> 
+int* get_callback_val<int>(const char* ckey, DD_CallBackBuff &cb) 
+{
+	Varying *v = nullptr;
+	cbuff<32> *k = nullptr;
+	for (unsigned i = 0; i < cb.num_events; i++) {
+		for (unsigned j = 0; j < cb.buffer[i].active; j++) {
+			k = &cb.buffer[i].args[j].key;
+			v = &cb.buffer[i].args[j].val;
+
+			if (v->type == VType::INT) {
+				if (k->compare(ckey) == 0) { return &v->v_int; }
+			}
+		}
+	}
+	return nullptr;
+}
+
+template<> 
+float* get_callback_val<float>(const char* ckey, DD_CallBackBuff &cb) 
+{
+	Varying *v = nullptr;
+	cbuff<32> *k = nullptr;
+	for (unsigned i = 0; i < cb.num_events; i++) {
+		for (unsigned j = 0; j < cb.buffer[i].active; j++) {
+			k = &cb.buffer[i].args[j].key;
+			v = &cb.buffer[i].args[j].val;
+
+			if (v->type == VType::FLOAT) {
+				if (k->compare(ckey) == 0) { return &v->v_float; }
+			}
+		}
+	}
+	return nullptr;
+}
+
+template<> 
+bool* get_callback_val<bool>(const char* ckey, DD_CallBackBuff &cb) 
+{
+	Varying *v = nullptr;
+	cbuff<32> *k = nullptr;
+	for (unsigned i = 0; i < cb.num_events; i++) {
+		for (unsigned j = 0; j < cb.buffer[i].active; j++) {
+			k = &cb.buffer[i].args[j].key;
+			v = &cb.buffer[i].args[j].val;
+
+			if (v->type == VType::BOOL) {
+				if (k->compare(ckey) == 0) { return &v->v_bool; }
+			}
+		}
+	}
+	return nullptr;
+}
+
+template<> 
+const char* get_callback_val<const char>(const char* ckey, DD_CallBackBuff &cb) 
+{
+	Varying *v = nullptr;
+	cbuff<32> *k = nullptr;
+	for (unsigned i = 0; i < cb.num_events; i++) {
+		for (unsigned j = 0; j < cb.buffer[i].active; j++) {
+			k = &cb.buffer[i].args[j].key;
+			v = &cb.buffer[i].args[j].val;
+
+			if (v->type == VType::STRING) {
+				if (k->compare(ckey) == 0) { return v->v_strptr.str(); }
+			}
+		}
+	}
+	return nullptr;
+}
+
 void clear_callbackbuff(DD_CallBackBuff &cb)
 {
 	for (unsigned i = 0; i < cb.num_events; i++) {
@@ -328,13 +400,16 @@ void parse_lua_events(lua_State *L, DD_CallBackBuff &cb)
 				// skip
 				break;
 			}
-			default:  /* table */
+			case LUA_TTABLE: {
 				DD_LEvent* levent = cb.getNewEvent();
 				if (levent) { 
 					parse_table(L, levent); 
 					//printf("\tEvent #%u\n", cb.num_events);
 				}
 				lua_pop(L, 1);	// Pop table
+				break;
+			}
+			default:
 				break;
 		}
 	}
@@ -352,14 +427,13 @@ void parse_table(lua_State *L, DD_LEvent *levent, const int tabs)
         		lua_pushvalue(L, -2); // copy the key
 				_key.format("%s", lua_tostring(L, -1));
 				lua_pop(L, 1);	// remove copy key
-				//printf("%s : %s\n", _key.str(), _val.str());
 				
 				if (_key.compare("event_id") == 0) {
 					levent->handle = _val.str();
 				}
 				else {
 					bool arg_set = add_arg_LEvent(levent, _key.str(), _val.str());
-					if (!arg_set) { printf("No more args available\n"); }
+					if (!arg_set) { printf("No more arg slots available\n"); }
 				}
 				break;
 			}
@@ -368,7 +442,6 @@ void parse_table(lua_State *L, DD_LEvent *levent, const int tabs)
         		lua_pushvalue(L, -2); // copy the key
 				_key.format("%s", lua_tostring(L, -1));
 				lua_pop(L, 1);	// remove copy key
-				//printf("%s : %s\n", _key.str(), lbool ? "true" : "false");
 
 				bool arg_set = add_arg_LEvent(levent, _key.str(), lbool);
 				if (!arg_set) { printf("No more args available\n"); }
@@ -381,7 +454,6 @@ void parse_table(lua_State *L, DD_LEvent *levent, const int tabs)
 					lua_pushvalue(L, -2); // copy the key
 					_key.format("%s", lua_tostring(L, -1));
 					lua_pop(L, 1);	// remove copy key
-					//printf("%s : %d\n", _key.str(), val);
 
 					bool arg_set = add_arg_LEvent(levent, _key.str(), val);
 					if (!arg_set) { printf("No more args available\n"); }
@@ -391,15 +463,17 @@ void parse_table(lua_State *L, DD_LEvent *levent, const int tabs)
 					lua_pushvalue(L, -2); // copy the key
 					_key.format("%s", lua_tostring(L, -1));
 					lua_pop(L, 1);	// remove copy key
-					//printf("%s : %.4f\n", _key.str(), val);
 
 					bool arg_set = add_arg_LEvent(levent, _key.str(), val);
 					if (!arg_set) { printf("No more args available\n"); }
 				}
 				break;
 			}
-			default:  /* table */
+			case LUA_TTABLE: {
 				parse_table(L, levent, tabs + 1);
+				break;
+			}
+			default:
 				break;
 		}
 		lua_pop(L, 1); // remove value

@@ -139,3 +139,7 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func);
 
 /// \brief Clear function reference
 void clear_lua_ref(lua_State *L, int func_ref);
+
+/// \brief Parse DD_CallBackBuff arguments to into values
+template <typename T>
+T* get_callback_val(const char* ckey, DD_CallBackBuff &cb) { return nullptr; }

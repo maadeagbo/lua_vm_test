@@ -11,13 +11,15 @@ do
     }
 
 	function create_agent( enitity )
-		e =	{}
-		e["event_id"] = "agent_creation"
-		e["agent.name"] = enitity.name
-		e["agent.pos.x"] = enitity.position[1]
-		e["agent.pos.y"] = enitity.position[2]
-		e["agent.pos.z"] = enitity.position[3]
-		e["agent.alive"] = enitity.alive
+		--e =	{}
+        e = {
+		    ["event_id"] = "agent_creation",
+            ["agent.name"] = enitity.name,
+            ["agent.pos.x"] = enitity.position[1],
+            ["agent.pos.y"] = enitity.position[2],
+            ["agent.pos.z"] = enitity.position[3],
+            ["agent.alive"] = enitity.alive
+        }
 		res_new_agent(e)
 	end
 
