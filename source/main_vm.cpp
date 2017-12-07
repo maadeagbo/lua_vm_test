@@ -1,113 +1,115 @@
+#include "DD_LuaHooks.h"
+#include "DummyClasses.h"
 #include <stdio.h>
 #include <typeinfo>
-#include "DummyClasses.h"
-#include "DD_LuaHooks.h"
 
 void check_sizes();
-void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q);
+void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q);
 
 cbuff<64> lvl_found;
 cbuff<256> file_;
 
-int main(const int argv, const char** argc)
-{
-	lua_State *L = luaL_newstate();         // opens lua
-	luaL_openlibs(L);                       // opens standard libraries
-	
-	// start up queue
-	DD_SimpleQueue simple_q;
-	DD_ResourceBin res_bin;
-	// register instance and callback to lua
-	register_instance_lua_xspace<DD_ResourceBin>(L, res_bin);
-	register_callback_lua(L, "res_new_agent", 
-		&dispatch_<DD_ResourceBin, &DD_ResourceBin::add_new_agent>);
+int main(const int argv, const char **argc) {
+  lua_State *L = luaL_newstate(); // opens lua
+  luaL_openlibs(L);               // opens standard libraries
 
-	if (argv == 1) {
-		printf("Provide lua file to test: <filename>.lua\n");
-	}
-	
-	for (int i = 1; i < argv; i++)
-	{
-		if (*argc[i] == '-') {
-			const char* nxt = argc[1];
-			nxt++;
-			if (*nxt && *nxt == 's') { 
-				check_sizes();
-				return 0;
-			}
-		}
-		else {
-			// attempt to read lua script then execute
-			parse_luafile(L, argc[i]);
-			cbuff<256> dir;
-			dir.format("%s%s", ROOT_DIR, "scripts/");
-			run_startup(L, dir.str(), &simple_q);
+  // start up queue
+  DD_SimpleQueue simple_q;
+  DD_ResourceBin res_bin;
+  // register instance and callback to lua
+  register_instance_lua_xspace<DD_ResourceBin>(L, res_bin);
+  register_callback_lua(
+      L, "res_new_agent",
+      &dispatch_<DD_ResourceBin, &DD_ResourceBin::add_new_agent>);
 
-			print_all_agents(res_bin);
-		}
-	}
-	lua_close(L);
-	return 0;
+  if (argv == 1) {
+    printf("Provide lua file to test: <filename>.lua\n");
+  }
+
+  for (int i = 1; i < argv; i++) {
+    if (*argc[i] == '-') {
+      const char *nxt = argc[1];
+      nxt++;
+      if (*nxt && *nxt == 's') {
+        check_sizes();
+        return 0;
+      }
+    } else {
+      // attempt to read lua script then execute
+      parse_luafile(L, argc[i]);
+      cbuff<256> dir;
+      dir.format("%s%s", ROOT_DIR, "scripts/");
+      run_startup(L, dir.str(), &simple_q);
+
+      print_all_agents(res_bin);
+    }
+  }
+  lua_close(L);
+  return 0;
 }
 
-void check_sizes()
-{
-	printf("Varying data: %u B\n", (unsigned)sizeof(Varying));
-	printf("DD_LEvent data: %u B\n", (unsigned)sizeof(DD_LEvent));
-	printf("DD_Queue data: %u B\n", (unsigned)sizeof(DD_SimpleQueue));
-	printf("DD_CallBackBuff data: %u B\n", (unsigned)sizeof(DD_CallBackBuff));
+void check_sizes() {
+  printf("Varying data: %u B\n", (unsigned)sizeof(Varying));
+  printf("DD_LEvent data: %u B\n", (unsigned)sizeof(DD_LEvent));
+  printf("DD_Queue data: %u B\n", (unsigned)sizeof(DD_SimpleQueue));
+  printf("DD_CallBackBuff data: %u B\n", (unsigned)sizeof(DD_CallBackBuff));
 }
 
-void run_startup(lua_State* L, const char* dir, DD_SimpleQueue *_q)
-{
-	// send event with directory
-	DD_LEvent levent;
-	levent.handle = "io";
-	levent.args[0].key = "file";
-	levent.args[0].val.type = VType::STRING;
-	levent.args[0].val.v_strptr = dir;
-	levent.active++;
+void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
+  // send event with directory
+  DD_LEvent levent;
+  levent.handle = "io";
+  levent.args[0].key = "file";
+  levent.args[0].val.type = VType::STRING;
+  levent.args[0].val.v_strptr = dir;
+  levent.active++;
 
-	callback_lua(L, levent, _q->cb_events, "generate_levels");
-	print_callbackbuff(_q->cb_events);
-	if (_q->cb_events.num_events == 1 && 
-		_q->cb_events.buffer[0].handle.compare("lvls_found") == 0) {
-		Varying *v = nullptr;
-		cbuff<32> *k = nullptr;
-		for (unsigned i = 0; i < _q->cb_events.buffer[0].active; i++) {
-			k = &_q->cb_events.buffer[0].args[i].key;
-			v = &_q->cb_events.buffer[0].args[i].val;
-			switch (v->type) {
-				case VType::STRING: 
-					if (k->contains("lvl_")) { lvl_found = v->v_strptr.str(); }
-				default:
-					break;
-			}
-		}
-	}
-	
-	if (!(*lvl_found.str()) || lvl_found.compare(" ") == 0) { return; }
-	clear_callbackbuff(_q->cb_events);
-	// reuse event to test update
-	levent.handle = "post";
-	levent.active = 0;
+  callback_lua(L, levent, _q->cb_events, "generate_levels");
+  print_callbackbuff(_q->cb_events);
+  if (_q->cb_events.num_events == 1 &&
+      _q->cb_events.buffer[0].handle.compare("lvls_found") == 0) {
+    Varying *v = nullptr;
+    cbuff<32> *k = nullptr;
+    for (unsigned i = 0; i < _q->cb_events.buffer[0].active; i++) {
+      k = &_q->cb_events.buffer[0].args[i].key;
+      v = &_q->cb_events.buffer[0].args[i].val;
+      switch (v->type) {
+      case VType::STRING:
+        if (k->contains("lvl_")) {
+          lvl_found = v->v_strptr.str();
+        }
+      default:
+        break;
+      }
+    }
+  }
 
-	file_.format("%s%s%s.lua", ROOT_DIR, "scripts/", lvl_found.str());
-	bool file_found = parse_luafile(L, file_.str());
-	if (!file_found) { return; }
+  if (!(*lvl_found.str()) || lvl_found.compare(" ") == 0) {
+    return;
+  }
+  clear_callbackbuff(_q->cb_events);
+  // reuse event to test update
+  levent.handle = "post";
+  levent.active = 0;
 
-	callback_lua(L, levent, _q->cb_events, "init", lvl_found.str());
-	clear_callbackbuff(_q->cb_events);
-	
-	int class_ref = get_lua_ref(L, "", lvl_found.str());
-	int func_ref = get_lua_ref(L, lvl_found.str(), "update");
-	printf("Global ref <%d>, Func ref : %d\n", class_ref, func_ref);
+  file_.format("%s%s%s.lua", ROOT_DIR, "scripts/", lvl_found.str());
+  bool file_found = parse_luafile(L, file_.str());
+  if (!file_found) {
+    return;
+  }
 
-	levent.args[0].key = "test_float";
-	levent.args[0].val.type = VType::FLOAT;
-	levent.args[0].val.v_float = 151515.f;
-	levent.active++;
-	callback_lua(L, levent, _q->cb_events, func_ref, class_ref);
-	print_callbackbuff(_q->cb_events);
-	clear_callbackbuff(_q->cb_events);
+  callback_lua(L, levent, _q->cb_events, "init", lvl_found.str());
+  clear_callbackbuff(_q->cb_events);
+
+  int class_ref = get_lua_ref(L, "", lvl_found.str());
+  int func_ref = get_lua_ref(L, lvl_found.str(), "update");
+  printf("Global ref <%d>, Func ref : %d\n", class_ref, func_ref);
+
+  levent.args[0].key = "test_float";
+  levent.args[0].val.type = VType::FLOAT;
+  levent.args[0].val.v_float = 151515.f;
+  levent.active++;
+  callback_lua(L, levent, _q->cb_events, func_ref, class_ref);
+  print_callbackbuff(_q->cb_events);
+  clear_callbackbuff(_q->cb_events);
 }

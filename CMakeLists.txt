@@ -66,9 +66,11 @@ endif()
 # use the file(GLOB...) or file(GLOB_RECURSE...) to grab wildcard src files
 file(GLOB_RECURSE SOURCES 	"${CMAKE_SOURCE_DIR}/source/*.cpp"
 							"${CMAKE_SOURCE_DIR}/include/*.hpp"
-							"${CMAKE_SOURCE_DIR}/include/*.h"
-							"${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include/*.hpp"
-							"${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include/*.h")
+							"${CMAKE_SOURCE_DIR}/include/*.h")
+
+
+# "${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include/*.hpp"
+# "${CMAKE_SOURCE_DIR}/lua53_Win64_lib/include/*.h"
 
 # add defines for engine resources
 add_definitions(
@@ -90,6 +92,17 @@ foreach(_proj_source IN ITEMS ${PROJECT_SOURCES})
 endforeach()
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${LUA_PATH})
+
+# clang-format
+if (UNIX)
+	add_custom_target(
+		clangformat
+		COMMAND /usr/bin/clang-format
+		-style=LLVM
+		-i
+		${SOURCES}
+	)
+endif()
 
 add_executable(lua_vm ${SOURCES} ${PROJECT_SOURCES})
 if(MSVC)
