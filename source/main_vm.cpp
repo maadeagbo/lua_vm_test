@@ -1,7 +1,7 @@
-#include "DD_LuaHooks.h"
-#include "DummyClasses.h"
 #include <stdio.h>
 #include <typeinfo>
+#include "DD_LuaHooks.h"
+#include "DummyClasses.h"
 
 void check_sizes();
 void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q);
@@ -10,8 +10,8 @@ cbuff<64> lvl_found;
 cbuff<256> file_;
 
 int main(const int argv, const char **argc) {
-  lua_State *L = luaL_newstate(); // opens lua
-  luaL_openlibs(L);               // opens standard libraries
+  lua_State *L = luaL_newstate();  // opens lua
+  luaL_openlibs(L);                // opens standard libraries
 
   // start up queue
   DD_SimpleQueue simple_q;
@@ -74,12 +74,12 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
       k = &_q->cb_events.buffer[0].args[i].key;
       v = &_q->cb_events.buffer[0].args[i].val;
       switch (v->type) {
-      case VType::STRING:
-        if (k->contains("lvl_")) {
-          lvl_found = v->v_strptr.str();
-        }
-      default:
-        break;
+        case VType::STRING:
+          if (k->contains("lvl_")) {
+            lvl_found = v->v_strptr.str();
+          }
+        default:
+          break;
       }
     }
   }

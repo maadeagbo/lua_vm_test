@@ -37,11 +37,9 @@ Assert::FailBehavior DefaultHandler(const char *condition, const char *msg,
                                     const char *file, const int line) {
   std::printf("%s(%d): Assert Failure: ", file, line);
 
-  if (condition != NULL)
-    std::printf("'%s' ", condition);
+  if (condition != NULL) std::printf("'%s' ", condition);
 
-  if (msg != NULL)
-    std::printf("%s", msg);
+  if (msg != NULL) std::printf("%s", msg);
 
   std::printf("\n");
 

@@ -98,7 +98,7 @@ if (UNIX)
 	add_custom_target(
 		clangformat
 		COMMAND /usr/bin/clang-format
-		-style=LLVM
+		-style=google
 		-i
 		${SOURCES}
 	)

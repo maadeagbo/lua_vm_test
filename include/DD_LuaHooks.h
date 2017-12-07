@@ -1,12 +1,12 @@
 #pragma once
-#include "DD_String.h"
-#include <cstdint>
 #include <stdlib.h>
+#include <cstdint>
 #include <typeinfo>
+#include "DD_String.h"
 
 extern "C" {
-#include "lua.h"
 #include "lauxlib.h"
+#include "lua.h"
 #include "lualib.h"
 }
 
@@ -122,13 +122,15 @@ void clear_lua_ref(lua_State *L, int func_ref);
 
 /// \brief Parse DD_CallBackBuff arguments to into values
 template <typename T>
-T* get_callback_val(const char* ckey, DD_CallBackBuff &cb) { return nullptr; }
+T *get_callback_val(const char *ckey, DD_CallBackBuff &cb) {
+  return nullptr;
+}
 
-template<>
-const char* get_callback_val<const char>(const char* ckey, DD_CallBackBuff &cb);
+template <>
+const char *get_callback_val<const char>(const char *ckey, DD_CallBackBuff &cb);
 
-template<>
-bool* get_callback_val<bool>(const char* ckey, DD_CallBackBuff &cb);
+template <>
+bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb);
 
-template<>
-float* get_callback_val<float>(const char* ckey, DD_CallBackBuff &cb);
+template <>
+float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb);

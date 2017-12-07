@@ -5,20 +5,20 @@
 #pragma once
 
 #include <DD_Container.h>
+#include <string.h>
 #include <cstdio>
 #include <cstdlib>
-#include <string.h>
 
 static size_t getCharHash(const char *s) {
   size_t h = 5381;
   int c;
-  while ((c = *s++))
-    h = ((h << 5) + h) + c;
+  while ((c = *s++)) h = ((h << 5) + h) + c;
   return h;
 }
 
 // small container (8 bytes + T)
-template <const int T> struct cbuff {
+template <const int T>
+struct cbuff {
   cbuff() { set(""); }
   cbuff(const char *in_str) { set(in_str); }
   int compare(const char *in_str) { return strcmp(cstr, in_str); }
@@ -48,7 +48,7 @@ template <const int T> struct cbuff {
   const char *str() const { return cstr; }
   size_t gethash() const { return hash; }
 
-private:
+ private:
   char cstr[T];
   size_t hash;
 };

@@ -53,7 +53,8 @@ bool add_arg_LEvent<const char *>(DD_LEvent *levent, const char *key,
   return true;
 }
 
-template <> int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
+template <>
+int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
   Varying *v = nullptr;
   cbuff<32> *k = nullptr;
   for (unsigned i = 0; i < cb.num_events; i++) {
@@ -175,28 +176,28 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx) {
 
   luaL_checkstack(L, 2, "too many arguments");
   switch (levent.args[_idx].val.type) {
-  case VType::BOOL:
-    lua_pushstring(L, levent.args[_idx].key.str());
-    lua_pushinteger(L, levent.args[_idx].val.v_bool ? 1 : 0);
-    lua_settable(L, -3);
-    break;
-  case VType::STRING:
-    lua_pushstring(L, levent.args[_idx].key.str());
-    lua_pushstring(L, levent.args[_idx].val.v_strptr.str());
-    lua_settable(L, -3);
-    break;
-  case VType::FLOAT:
-    lua_pushstring(L, levent.args[_idx].key.str());
-    lua_pushnumber(L, levent.args[_idx].val.v_float);
-    lua_settable(L, -3);
-    break;
-  case VType::INT:
-    lua_pushstring(L, levent.args[_idx].key.str());
-    lua_pushinteger(L, levent.args[_idx].val.v_int);
-    lua_settable(L, -3);
-    break;
-  default:
-    break; // set nothing
+    case VType::BOOL:
+      lua_pushstring(L, levent.args[_idx].key.str());
+      lua_pushinteger(L, levent.args[_idx].val.v_bool ? 1 : 0);
+      lua_settable(L, -3);
+      break;
+    case VType::STRING:
+      lua_pushstring(L, levent.args[_idx].key.str());
+      lua_pushstring(L, levent.args[_idx].val.v_strptr.str());
+      lua_settable(L, -3);
+      break;
+    case VType::FLOAT:
+      lua_pushstring(L, levent.args[_idx].key.str());
+      lua_pushnumber(L, levent.args[_idx].val.v_float);
+      lua_settable(L, -3);
+      break;
+    case VType::INT:
+      lua_pushstring(L, levent.args[_idx].key.str());
+      lua_pushinteger(L, levent.args[_idx].val.v_int);
+      lua_settable(L, -3);
+      break;
+    default:
+      break;  // set nothing
   }
 }
 
@@ -216,20 +217,20 @@ void print_callbackbuff(DD_CallBackBuff &cb) {
       cbuff<32> &k = cb.buffer[i].args[j].key;
       Varying &v = cb.buffer[i].args[j].val;
       switch (v.type) {
-      case VType::BOOL:
-        printf("\t%s : %s\n", k.str(), v.v_bool ? "true" : "false");
-        break;
-      case VType::FLOAT:
-        printf("\t%s : %.3f\n", k.str(), v.v_float);
-        break;
-      case VType::INT:
-        printf("\t%s : %d\n", k.str(), v.v_int);
-        break;
-      case VType::STRING:
-        printf("\t%s : %s\n", k.str(), v.v_strptr.str());
-        break;
-      default:
-        break;
+        case VType::BOOL:
+          printf("\t%s : %s\n", k.str(), v.v_bool ? "true" : "false");
+          break;
+        case VType::FLOAT:
+          printf("\t%s : %.3f\n", k.str(), v.v_float);
+          break;
+        case VType::INT:
+          printf("\t%s : %d\n", k.str(), v.v_int);
+          break;
+        case VType::STRING:
+          printf("\t%s : %s\n", k.str(), v.v_strptr.str());
+          break;
+        default:
+          break;
       }
     }
   }
@@ -266,7 +267,7 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
       return;
     }
     lua_rotate(L, 1, -1);
-  } else { // find global function
+  } else {  // find global function
     lua_getglobal(L, func);
     if (check_stack_nil(L, -1)) {
       printf("<%s> global function doesn't exist.\n", func);
@@ -275,14 +276,14 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
   }
 
   // push event arguments (in the form of a table)
-  lua_pushstring(L, levent.handle.str()); // push event handle
-  lua_newtable(L); // create new table and put on top of stack
+  lua_pushstring(L, levent.handle.str());  // push event handle
+  lua_newtable(L);  // create new table and put on top of stack
   if (levent.active > 0) {
     for (unsigned i = 0; i < levent.active; i++) {
-      push_args(L, levent, i + 1); // push arguments
+      push_args(L, levent, i + 1);  // push arguments
     }
   }
-  lua_pushinteger(L, (int)levent.active); // push # of arguments
+  lua_pushinteger(L, (int)levent.active);  // push # of arguments
 
   // call function
   int num_args = lclass_flag ? 4 : 3;
@@ -317,7 +318,7 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
       printf("<%d> global doesn't exist.\n", global_ref);
       return;
     }
-  } else { // find global function
+  } else {  // find global function
     lua_rawgeti(L, LUA_REGISTRYINDEX, func_ref);
     if (check_stack_nil(L, -1)) {
       printf("<%d> global function doesn't exist.\n", func_ref);
@@ -326,14 +327,14 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
   }
 
   // push event arguments (in the form of a table)
-  lua_pushstring(L, levent.handle.str()); // push event handle
-  lua_newtable(L); // create new table and put on top of stack
+  lua_pushstring(L, levent.handle.str());  // push event handle
+  lua_newtable(L);  // create new table and put on top of stack
   if (levent.active > 0) {
     for (unsigned i = 0; i < levent.active; i++) {
-      push_args(L, levent, i + 1); // push arguments
+      push_args(L, levent, i + 1);  // push arguments
     }
   }
-  lua_pushinteger(L, (int)levent.active); // push # of arguments
+  lua_pushinteger(L, (int)levent.active);  // push # of arguments
 
   // call function
   int num_args = global_ref ? 4 : 3;
@@ -351,21 +352,21 @@ void stack_dump(lua_State *L) {
   for (int i = 1; i <= top; i++) { /* repeat for each level */
     int t = lua_type(L, i);
     switch (t) {
-    case LUA_TSTRING: /* strings */
-      printf("'%s'", lua_tostring(L, i));
-      break;
-    case LUA_TBOOLEAN: /* Booleans */
-      printf(lua_toboolean(L, i) ? "true" : "false");
-      break;
-    case LUA_TNUMBER:          /* numbers */
-      if (lua_isinteger(L, i)) /* integer? */
-        printf("%lld", lua_tointeger(L, i));
-      else /* float */
-        printf("%g", lua_tonumber(L, i));
-      break;
-    default: /* other values */
-      printf("%s", lua_typename(L, t));
-      break;
+      case LUA_TSTRING: /* strings */
+        printf("'%s'", lua_tostring(L, i));
+        break;
+      case LUA_TBOOLEAN: /* Booleans */
+        printf(lua_toboolean(L, i) ? "true" : "false");
+        break;
+      case LUA_TNUMBER:          /* numbers */
+        if (lua_isinteger(L, i)) /* integer? */
+          printf("%lld", lua_tointeger(L, i));
+        else /* float */
+          printf("%g", lua_tonumber(L, i));
+        break;
+      default: /* other values */
+        printf("%s", lua_typename(L, t));
+        break;
     }
     printf("  "); /* put a separator */
   }
@@ -383,140 +384,140 @@ void parse_lua_events(lua_State *L, DD_CallBackBuff &cb) {
   for (int i = 1; i <= top; i++) {
     int t = lua_type(L, i);
     switch (t) {
-    case LUA_TSTRING: {
-      // skip
-      break;
-    }
-    case LUA_TBOOLEAN: {
-      // skip
-      break;
-    }
-    case LUA_TNUMBER: {
-      // skip
-      break;
-    }
-    case LUA_TTABLE: {
-      DD_LEvent *levent = cb.getNewEvent();
-      if (levent) {
-        parse_table(L, levent);
-        // printf("\tEvent #%u\n", cb.num_events);
+      case LUA_TSTRING: {
+        // skip
+        break;
       }
-      lua_pop(L, 1); // Pop table
-      break;
-    }
-    default:
-      break;
+      case LUA_TBOOLEAN: {
+        // skip
+        break;
+      }
+      case LUA_TNUMBER: {
+        // skip
+        break;
+      }
+      case LUA_TTABLE: {
+        DD_LEvent *levent = cb.getNewEvent();
+        if (levent) {
+          parse_table(L, levent);
+          // printf("\tEvent #%u\n", cb.num_events);
+        }
+        lua_pop(L, 1);  // Pop table
+        break;
+      }
+      default:
+        break;
     }
   }
   // printf("# of events parsed: %u\n", cb.num_events);
 }
 
 void parse_table(lua_State *L, DD_LEvent *levent, const int tabs) {
-  lua_pushnil(L);                // push key on stack for table access
-  while (lua_next(L, -2) != 0) { // adds value to the top of the stack
-    int t = lua_type(L, -1);     // get value type
+  lua_pushnil(L);                 // push key on stack for table access
+  while (lua_next(L, -2) != 0) {  // adds value to the top of the stack
+    int t = lua_type(L, -1);      // get value type
     switch (t) {
-    case LUA_TSTRING: {
-      _val.format("%s", lua_tostring(L, -1));
-      lua_pushvalue(L, -2); // copy the key
-      _key.format("%s", lua_tostring(L, -1));
-      lua_pop(L, 1); // remove copy key
-
-      if (_key.compare("event_id") == 0) {
-        levent->handle = _val.str();
-      } else {
-        bool arg_set = add_arg_LEvent(levent, _key.str(), _val.str());
-        if (!arg_set) {
-          printf("No more arg slots available\n");
-        }
-      }
-      break;
-    }
-    case LUA_TBOOLEAN: {
-      bool lbool = lua_toboolean(L, -1);
-      lua_pushvalue(L, -2); // copy the key
-      _key.format("%s", lua_tostring(L, -1));
-      lua_pop(L, 1); // remove copy key
-
-      bool arg_set = add_arg_LEvent(levent, _key.str(), lbool);
-      if (!arg_set) {
-        printf("No more args available\n");
-      }
-
-      break;
-    }
-    case LUA_TNUMBER: {
-      if (lua_isinteger(L, -1)) {
-        int val = (int)lua_tointeger(L, -1);
-        lua_pushvalue(L, -2); // copy the key
+      case LUA_TSTRING: {
+        _val.format("%s", lua_tostring(L, -1));
+        lua_pushvalue(L, -2);  // copy the key
         _key.format("%s", lua_tostring(L, -1));
-        lua_pop(L, 1); // remove copy key
+        lua_pop(L, 1);  // remove copy key
 
-        bool arg_set = add_arg_LEvent(levent, _key.str(), val);
+        if (_key.compare("event_id") == 0) {
+          levent->handle = _val.str();
+        } else {
+          bool arg_set = add_arg_LEvent(levent, _key.str(), _val.str());
+          if (!arg_set) {
+            printf("No more arg slots available\n");
+          }
+        }
+        break;
+      }
+      case LUA_TBOOLEAN: {
+        bool lbool = lua_toboolean(L, -1);
+        lua_pushvalue(L, -2);  // copy the key
+        _key.format("%s", lua_tostring(L, -1));
+        lua_pop(L, 1);  // remove copy key
+
+        bool arg_set = add_arg_LEvent(levent, _key.str(), lbool);
         if (!arg_set) {
           printf("No more args available\n");
         }
-      } else {
-        float val = (float)lua_tonumber(L, -1);
-        lua_pushvalue(L, -2); // copy the key
-        _key.format("%s", lua_tostring(L, -1));
-        lua_pop(L, 1); // remove copy key
 
-        bool arg_set = add_arg_LEvent(levent, _key.str(), val);
-        if (!arg_set) {
-          printf("No more args available\n");
-        }
+        break;
       }
-      break;
+      case LUA_TNUMBER: {
+        if (lua_isinteger(L, -1)) {
+          int val = (int)lua_tointeger(L, -1);
+          lua_pushvalue(L, -2);  // copy the key
+          _key.format("%s", lua_tostring(L, -1));
+          lua_pop(L, 1);  // remove copy key
+
+          bool arg_set = add_arg_LEvent(levent, _key.str(), val);
+          if (!arg_set) {
+            printf("No more args available\n");
+          }
+        } else {
+          float val = (float)lua_tonumber(L, -1);
+          lua_pushvalue(L, -2);  // copy the key
+          _key.format("%s", lua_tostring(L, -1));
+          lua_pop(L, 1);  // remove copy key
+
+          bool arg_set = add_arg_LEvent(levent, _key.str(), val);
+          if (!arg_set) {
+            printf("No more args available\n");
+          }
+        }
+        break;
+      }
+      case LUA_TTABLE: {
+        parse_table(L, levent, tabs + 1);
+        break;
+      }
+      default:
+        break;
     }
-    case LUA_TTABLE: {
-      parse_table(L, levent, tabs + 1);
-      break;
-    }
-    default:
-      break;
-    }
-    lua_pop(L, 1); // remove value
+    lua_pop(L, 1);  // remove value
   }
 }
 
 void print_table(lua_State *L, const int tabs) {
   // assume table is already on stack
-  lua_pushnil(L);                // push key on stack for table access
-  while (lua_next(L, -2) != 0) { // adds value to the top of the stack
+  lua_pushnil(L);                 // push key on stack for table access
+  while (lua_next(L, -2) != 0) {  // adds value to the top of the stack
     // copy the key so that lua_tostring does not modify the original
     lua_pushvalue(L, -2);
     /* uses 'key' (at index -1) and 'value' (at index -2) */
-    if (lua_isboolean(L, -2)) {                         // boolean
+    if (lua_isboolean(L, -2)) {  // boolean
       bool lbool = lua_toboolean(L, -2);
       printf("key(bool) : %s\n", lua_tostring(L, -1));
       printf("\t%s \n", lbool ? "t" : "f");
-      lua_pop(L, 1); // remove copy key
+      lua_pop(L, 1);  // remove copy key
     } else if (lua_isnumber(L, -2)) {
-      if (lua_isinteger(L, -2)) {                       // integer
+      if (lua_isinteger(L, -2)) {  // integer
         int32_t val = (int32_t)lua_tointeger(L, -2);
         printf("key(int) : %s\n", lua_tostring(L, -1));
         printf("\t%d \n", val);
-        lua_pop(L, 1); // remove copy key
-      } else {                                          // float
+        lua_pop(L, 1);  // remove copy key
+      } else {          // float
         float val = (float)lua_tonumber(L, -2);
         printf("key(float) : %s\n", lua_tostring(L, -1));
         printf("\t%.4f \n", val);
-        lua_pop(L, 1); // remove copy key
+        lua_pop(L, 1);  // remove copy key
       }
-    } else if (lua_isstring(L, -2)) {                   // string
+    } else if (lua_isstring(L, -2)) {  // string
       _key.format("%s", lua_tostring(L, -2));
       printf("key(str) : %s\n", lua_tostring(L, -1));
       printf("\t%s \n", _key.str());
-      lua_pop(L, 1); // remove copy key
+      lua_pop(L, 1);  // remove copy key
     } else if (lua_istable(L, -2)) {
       printf("--key (array - %d) : %s\n", tabs, lua_tostring(L, -1));
-      lua_pop(L, 1); // remove copy key
+      lua_pop(L, 1);  // remove copy key
       // printf("-->%d\t", tabs); stack_dump(L);	// check entrance
       print_table(L, tabs + 1);
       printf("--array - %d : done\n", tabs);
     }
-    lua_pop(L, 1); // remove value
+    lua_pop(L, 1);  // remove value
   }
   // printf("<--%d\t", tabs); stack_dump(L);			// check exit
 }
@@ -525,7 +526,7 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
   bool lclass_flag = lclass && *lclass;
   bool not_found = true;
 
-  if (lclass_flag) { // find class function
+  if (lclass_flag) {  // find class function
     lua_getglobal(L, lclass);
     if (check_stack_nil(L, -1)) {
       printf("<%s> global doesn't exist.\n", lclass);
@@ -539,7 +540,7 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
       lua_rotate(L, 1, -1);
       lua_pop(L, 1);
     }
-  } else { // find global
+  } else {  // find global
     lua_getglobal(L, func);
     if (check_stack_nil(L, -1)) {
       printf("<%s> global function/class doesn't exist.\n", func);
@@ -548,14 +549,13 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
 
   int t = lua_type(L, -1);
   if (t == LUA_TFUNCTION || t == LUA_TTABLE) {
-    return luaL_ref(L, LUA_REGISTRYINDEX); // store reference
+    return luaL_ref(L, LUA_REGISTRYINDEX);  // store reference
   } else {
-    lua_pop(L, 1); // remove nil from stack
+    lua_pop(L, 1);  // remove nil from stack
   }
   return LUA_REFNIL;
 }
 
-void clear_lua_ref(lua_State *L, int func_ref)
-{
-	luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
+void clear_lua_ref(lua_State *L, int func_ref) {
+  luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
 }

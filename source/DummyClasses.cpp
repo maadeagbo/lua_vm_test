@@ -7,7 +7,7 @@ bool DD_SimpleQueue::pop(DD_LEvent &levent) {
 
   levent = std::move(q_handle[q_head]);
   q_head = (q_head + 1) % QUEUE_BOUND;
-  q_size -= 1; // adjust queue size
+  q_size -= 1;  // adjust queue size
   return true;
 }
 
@@ -18,7 +18,7 @@ bool DD_SimpleQueue::push(DD_LEvent &levent) {
 
   q_handle[q_tail] = std::move(levent);
   q_tail = (q_tail + 1) % QUEUE_BOUND;
-  q_size += 1; // adjust queue size
+  q_size += 1;  // adjust queue size
   return true;
 }
 

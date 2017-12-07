@@ -8,8 +8,8 @@
 #pragma warning(disable : 4996)
 #endif
 
-#include "Pow2Assert.h"
 #include <algorithm>
+#include "Pow2Assert.h"
 
 /*
 * Copyright (c) 2016, Moses Adeagbo
@@ -36,8 +36,9 @@
 -----------------------------------------------------------------------------*/
 
 // Array container used for Day Dream engine
-template <class T> class dd_array {
-public:
+template <class T>
+class dd_array {
+ public:
   // ctor
   dd_array(const size_t size = 0) : _size(size) {
     if (size != 0) {
@@ -87,16 +88,16 @@ public:
   // copying
   void operator=(const dd_array &other) {
     if (other._size == 0) {
-      return; // nothing in the second array
+      return;  // nothing in the second array
     }
-    if (_size == 0) { // nothing in this array
+    if (_size == 0) {  // nothing in this array
       _size = other._size;
       m_data = new T[_size]();
     }
 
-    if (_size >= other._size) { // other array is smaller
+    if (_size >= other._size) {  // other array is smaller
       std::copy(other.m_data, other.m_data + other._size, m_data);
-    } else { // other array is bigger or equal to this array
+    } else {  // other array is bigger or equal to this array
       std::copy(other.m_data, other.m_data + _size, m_data);
     }
   }
@@ -132,16 +133,18 @@ public:
   // checks is data was allocated in memory
   inline bool isValid() const { return (m_data == nullptr) ? false : true; }
 
-private:
+ private:
   size_t _size;
   T *m_data;
 };
 
-template <class T> class dd_2Darray {
-public:
+template <class T>
+class dd_2Darray {
+ public:
   // proxy object used to provide second brackets
-  template <class R> class OperatorBracketHelper {
-  public:
+  template <class R>
+  class OperatorBracketHelper {
+   public:
     OperatorBracketHelper(dd_2Darray<R> &Parent, size_t FirstIndex)
         : m_parent(Parent), m_firstIndex(FirstIndex) {}
     // method called for "second brackets"
@@ -149,7 +152,7 @@ public:
       return m_parent.GetElement(m_firstIndex, SecondIndex);
     }
 
-  private:
+   private:
     dd_2Darray<R> &m_parent;
     size_t m_firstIndex;
   };
@@ -209,9 +212,9 @@ public:
   // copying
   void operator=(const dd_2Darray &other) {
     if (other.m_column == 0 && other.m_row == 0) {
-      return; // nothing in the second array
+      return;  // nothing in the second array
     }
-    if (m_row == 0 && m_column == 0) { // nothing in this array
+    if (m_row == 0 && m_column == 0) {  // nothing in this array
       m_row = other.m_row;
       m_column = other.m_column;
       m_data = new T[(m_row * m_column)]();
@@ -269,9 +272,9 @@ public:
   // checks is data was allocated in memory
   inline bool isValid() const { return (m_data == nullptr) ? false : true; }
 
-private:
+ private:
   size_t m_row, m_column;
   T *m_data;
 };
 
-#endif // !DDAYDREAM_CONTAINERS
+#endif  // !DDAYDREAM_CONTAINERS
