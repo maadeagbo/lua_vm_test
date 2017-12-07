@@ -4,11 +4,10 @@ do
     base_hero = require "scripts.Hero"
     base_monster = require "scripts.Monster"
 
-    DeadWorld = 
-    {
-        main_character = base_hero:new({name = "Slayer"}),
-        enemies = {}
-    }
+    DeadWorld = {}
+
+	main_character = base_hero:new({name = "Slayer"})
+    enemies = {}
 
 	function create_agent( enitity )
 		--e =	{}
@@ -26,22 +25,22 @@ do
     function DeadWorld:init( map )
 		-- spawn hero
 		print("Deadworld init called\n")
-		self.main_character.name = "Bob"
-		self.main_character.position = { 0.0, 1.0, -2.0 }
-		self.main_character.alive = true
-		create_agent(self.main_character)
+		main_character.position = { 0.0, 1.0, -2.0 }
+		main_character.alive = true
+		create_agent(main_character)
+
         -- spawn some monsters
         for i=1,5 do
             new_name = string.format("monster_%d",i)
-            self.enemies[i] = base_monster:new({name = new_name, alive = true})
-			create_agent(self.enemies[i])
+            enemies[i] = base_monster:new({name = new_name, alive = true})
+			create_agent(enemies[i])
         end
     end
 
     function DeadWorld:world_status()
-        self.main_character:curr_status()
-        print(string.format("# of Monsters = %d", #(self.enemies)))
-        for i,v in ipairs(self.enemies) do
+        main_character:curr_status()
+        print(string.format("# of Monsters = %d", #(enemies)))
+        for i,v in ipairs(enemies) do
             v:curr_status()
         end
     end

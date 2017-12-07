@@ -7,7 +7,8 @@ do
         name = "not_set",
         health = 0.0,
         position = { 0.0, 0.0, 0.0 },
-        alive = false
+        alive = false,
+		callbacks = {}
     }
 
     function Entity:new(params)

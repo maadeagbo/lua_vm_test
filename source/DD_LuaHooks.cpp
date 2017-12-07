@@ -555,6 +555,7 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
   return LUA_REFNIL;
 }
 
-void clear_lua_func(lua_State *L, int func_ref) {
-  luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
+void clear_lua_ref(lua_State *L, int func_ref)
+{
+	luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
 }

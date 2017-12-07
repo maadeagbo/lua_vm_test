@@ -1,5 +1,4 @@
 -- Config file for loading levels and other settings
-hero_script = require "scripts.Hero"
 
 local inputs =
 {

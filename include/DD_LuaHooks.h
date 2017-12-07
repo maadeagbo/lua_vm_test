@@ -122,6 +122,13 @@ void clear_lua_ref(lua_State *L, int func_ref);
 
 /// \brief Parse DD_CallBackBuff arguments to into values
 template <typename T>
-T *get_callback_val(const char *ckey, DD_CallBackBuff &cb) {
-  return nullptr;
-}
+T* get_callback_val(const char* ckey, DD_CallBackBuff &cb) { return nullptr; }
+
+template<>
+const char* get_callback_val<const char>(const char* ckey, DD_CallBackBuff &cb);
+
+template<>
+bool* get_callback_val<bool>(const char* ckey, DD_CallBackBuff &cb);
+
+template<>
+float* get_callback_val<float>(const char* ckey, DD_CallBackBuff &cb);
