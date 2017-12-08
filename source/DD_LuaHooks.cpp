@@ -55,7 +55,7 @@ bool add_arg_LEvent<const char *>(DD_LEvent *levent, const char *key,
 
 template <>
 int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
-  Varying *v = nullptr;
+  Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
   for (unsigned i = 0; i < cb.num_events; i++) {
     for (unsigned j = 0; j < cb.buffer[i].active; j++) {
@@ -74,7 +74,7 @@ int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
 
 template <>
 float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb) {
-  Varying *v = nullptr;
+  Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
   for (unsigned i = 0; i < cb.num_events; i++) {
     for (unsigned j = 0; j < cb.buffer[i].active; j++) {
@@ -93,7 +93,7 @@ float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb) {
 
 template <>
 bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb) {
-  Varying *v = nullptr;
+  Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
   for (unsigned i = 0; i < cb.num_events; i++) {
     for (unsigned j = 0; j < cb.buffer[i].active; j++) {
@@ -113,7 +113,7 @@ bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb) {
 template <>
 const char *get_callback_val<const char>(const char *ckey,
                                          DD_CallBackBuff &cb) {
-  Varying *v = nullptr;
+  Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
   for (unsigned i = 0; i < cb.num_events; i++) {
     for (unsigned j = 0; j < cb.buffer[i].active; j++) {
@@ -143,6 +143,21 @@ bool check_stack_nil(lua_State *L, int idx) {
     return true;
   }
   return false;
+}
+
+lua_State *init_lua_state() {
+  lua_State *L = luaL_newstate();  // opens lua
+  if (L) {
+    luaL_openlibs(L);                  // opens standard libraries
+    append_package_path(L, ROOT_DIR);  // add project root path to scripts
+
+    // Add global variables for all scripts
+    cbuff<512> dir;
+    dir.format("%sscripts/", ROOT_DIR);
+    lua_pushstring(L, dir.str());
+    lua_setglobal(L, "SCRIPTS_DIR");
+  }
+  return L;
 }
 
 bool parse_luafile(lua_State *L, const char *filename) {
@@ -177,24 +192,20 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx) {
   luaL_checkstack(L, 2, "too many arguments");
   switch (levent.args[_idx].val.type) {
     case VType::BOOL:
-      lua_pushstring(L, levent.args[_idx].key.str());
       lua_pushinteger(L, levent.args[_idx].val.v_bool ? 1 : 0);
-      lua_settable(L, -3);
+      lua_setfield(L, -2, levent.args[_idx].key.str());
       break;
     case VType::STRING:
-      lua_pushstring(L, levent.args[_idx].key.str());
       lua_pushstring(L, levent.args[_idx].val.v_strptr.str());
-      lua_settable(L, -3);
+      lua_setfield(L, -2, levent.args[_idx].key.str());
       break;
     case VType::FLOAT:
-      lua_pushstring(L, levent.args[_idx].key.str());
       lua_pushnumber(L, levent.args[_idx].val.v_float);
-      lua_settable(L, -3);
+      lua_setfield(L, -2, levent.args[_idx].key.str());
       break;
     case VType::INT:
-      lua_pushstring(L, levent.args[_idx].key.str());
       lua_pushinteger(L, levent.args[_idx].val.v_int);
-      lua_settable(L, -3);
+      lua_setfield(L, -2, levent.args[_idx].key.str());
       break;
     default:
       break;  // set nothing
@@ -215,7 +226,7 @@ void print_callbackbuff(DD_CallBackBuff &cb) {
     printf("Event: %s\n", cb.buffer[i].handle.str());
     for (unsigned j = 0; j < cb.buffer[i].active; j++) {
       cbuff<32> &k = cb.buffer[i].args[j].key;
-      Varying &v = cb.buffer[i].args[j].val;
+      Varying<32> &v = cb.buffer[i].args[j].val;
       switch (v.type) {
         case VType::BOOL:
           printf("\t%s : %s\n", k.str(), v.v_bool ? "true" : "false");
@@ -558,4 +569,17 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
 
 void clear_lua_ref(lua_State *L, int func_ref) {
   luaL_unref(L, LUA_REGISTRYINDEX, func_ref);
+}
+
+void append_package_path(lua_State *L, const char *path) {
+  cbuff<512> curr_path, new_path;
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "path");
+  curr_path = lua_tostring(L, -1);  // grab path string from top of stack
+  new_path.format(";%s/?.lua", path);
+
+  lua_pop(L, 1);  // get rid of the old path string on the stack
+  lua_pushstring(L, new_path.str());  // push the new one
+  lua_setfield(L, -2, "path");        // set the field "path"
+  lua_pop(L, 1);                      // pop package table
 }

@@ -36,11 +36,3 @@ struct DD_ResourceBin {
 
 /// \brief Prints all agent infromation
 void print_all_agents(DD_ResourceBin &resbin);
-
-// This template wraps a member function into a C-style "free" function
-// compatible with lua.
-template <typename T, int (T::*f)(lua_State *L)>
-int dispatch_(lua_State *L) {
-  T *ptr = *static_cast<T **>(lua_getextraspace(L));
-  return ((*ptr).*f)(L);
-}

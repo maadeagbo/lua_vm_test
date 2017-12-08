@@ -14,11 +14,13 @@ function generate_levels( event, args, num_args )
     num_lvls = 0; dir_str = ""
     if (event == "io" and num_args == 1) then
         for k,v in pairs(args) do 
-			dir_str = v -- grab file location
+			if (v ~= "bam_bam") then
+                print("IO event incorrect: "..v)
+            end
 		end 
     end
     for i,v in pairs(inputs) do
-        filename = string.format( "%s%s.lua", tostring(dir_str), v)
+        filename = string.format( "%s%s.lua", SCRIPTS_DIR, v)
         _file = io.open(filename)
         -- add to output if found
         if _file then 

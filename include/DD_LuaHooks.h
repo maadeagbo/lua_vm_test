@@ -14,15 +14,16 @@ extern "C" {
 #define MAX_EVENT_ARGS 8
 
 /// \brief class for parsing Varying data struct
-enum class VType : unsigned { INT, BOOL, FLOAT, STRING, COUNT };
+enum class VType : unsigned { INT, BOOL, FLOAT, STRING };
 
 /// \brief Data type for event values
+template <unsigned str_size>
 struct Varying {
   Varying() : v_strptr() {}
   VType type;
 
   union {
-    cbuff<64> v_strptr;
+    cbuff<str_size> v_strptr;
     int32_t v_int;
     float v_float;
     bool v_bool;
@@ -34,7 +35,7 @@ struct DD_LEvent {
   // DD_LEvent() : args(0) {}
   struct KeyVal {
     cbuff<32> key;
-    Varying val;
+    Varying<32> val;
   };
 
   cbuff<32> handle;
@@ -43,11 +44,27 @@ struct DD_LEvent {
   unsigned priority_timer[2] = {0, 0};
 };
 
+/// \brief Data type for passing function arguments to C++ from Lua
+struct DD_LFuncArg {
+  cbuff<32> arg_name;
+  Varying<256> arg;
+};
+
 /// \brief Add argument to DD_LEvent
 template <typename T>
 bool add_arg_LEvent(DD_LEvent *levent, const char *key, T arg) {
   return false;
 }
+
+template <>
+bool add_arg_LEvent<int>(DD_LEvent *levent, const char *key, int arg);
+template <>
+bool add_arg_LEvent<float>(DD_LEvent *levent, const char *key, float arg);
+template <>
+bool add_arg_LEvent<bool>(DD_LEvent *levent, const char *key, bool arg);
+template <>
+bool add_arg_LEvent<const char *>(DD_LEvent *levent, const char *key,
+                                  const char *arg);
 
 /// \brief Buffer to hold evens from callback function
 struct DD_CallBackBuff {
@@ -58,8 +75,20 @@ struct DD_CallBackBuff {
   unsigned num_events = 0;
 };
 
+/// \brief Buffer to hold arguments from Lua invocations of C++ functions
+struct DD_FuncBuff {
+  /// \brief Get empty argument from buffer (return nullptr if buffer is full)
+  DD_LFuncArg *getNextArg();
+
+  DD_LFuncArg buffer[MAX_CALLBACK_EVENTS];
+  unsigned num_events = 0;
+};
+
 /// \brief resets DD_CallBackBuff
 void clear_callbackbuff(DD_CallBackBuff &cb);
+
+/// \brief Initialize Lua VM
+lua_State *init_lua_state();
 
 /// \brief Parse the arguments from an error (lua) and end lua VM
 template <typename... Args>
@@ -74,6 +103,17 @@ template <class T>
 void register_instance_lua_xspace(lua_State *L, T &instance) {
   *static_cast<T **>(lua_getextraspace(L)) = &instance;
 }
+
+/// \brief This template wraps a member function into a C-style "free" function
+/// compatible with lua.
+template <typename T, int (T::*f)(lua_State *L)>
+int dispatch_(lua_State *L) {
+  T *ptr = *static_cast<T **>(lua_getextraspace(L));
+  return ((*ptr).*f)(L);
+}
+
+/// \brief Append a path to lua package path to search for scripts
+void append_package_path(lua_State *L, const char *path);
 
 /// \brief Check lua stack value for nil (returns true if nil)
 bool check_stack_nil(lua_State *L, int idx);
@@ -105,7 +145,7 @@ void parse_callbacks(lua_State *L, DD_CallBackBuff &cb);
 /// \brief Parse all events from callbacks
 void parse_lua_events(lua_State *L, DD_CallBackBuff &cb);
 
-/// ]brief Parse table into DD_LEvent
+/// \brief Parse table into DD_LEvent
 void parse_table(lua_State *L, DD_LEvent *levent, const int tabs = 0);
 
 /// \brief Print tables for returned events (debug)
@@ -128,9 +168,9 @@ T *get_callback_val(const char *ckey, DD_CallBackBuff &cb) {
 
 template <>
 const char *get_callback_val<const char>(const char *ckey, DD_CallBackBuff &cb);
-
 template <>
 bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb);
-
 template <>
 float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb);
+template <>
+int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb);
