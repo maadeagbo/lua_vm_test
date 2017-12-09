@@ -1,7 +1,8 @@
 #include "DD_LuaHooks.h"
 
 namespace {
-cbuff<64> _key, _val;
+cbuff<64> _key;
+cbuff<256> _val;
 }
 
 template <>
@@ -54,13 +55,13 @@ bool add_arg_LEvent<const char *>(DD_LEvent *levent, const char *key,
 }
 
 template <>
-int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
+int *DD_CallBackBuff::get_callback_val<int>(const char *ckey) {
   Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
-  for (unsigned i = 0; i < cb.num_events; i++) {
-    for (unsigned j = 0; j < cb.buffer[i].active; j++) {
-      k = &cb.buffer[i].args[j].key;
-      v = &cb.buffer[i].args[j].val;
+  for (unsigned i = 0; i < num_events; i++) {
+    for (unsigned j = 0; j < buffer[i].active; j++) {
+      k = &buffer[i].args[j].key;
+      v = &buffer[i].args[j].val;
 
       if (v->type == VType::INT) {
         if (k->compare(ckey) == 0) {
@@ -73,13 +74,13 @@ int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb) {
 }
 
 template <>
-float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb) {
+float *DD_CallBackBuff::get_callback_val<float>(const char *ckey) {
   Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
-  for (unsigned i = 0; i < cb.num_events; i++) {
-    for (unsigned j = 0; j < cb.buffer[i].active; j++) {
-      k = &cb.buffer[i].args[j].key;
-      v = &cb.buffer[i].args[j].val;
+  for (unsigned i = 0; i < num_events; i++) {
+    for (unsigned j = 0; j < buffer[i].active; j++) {
+      k = &buffer[i].args[j].key;
+      v = &buffer[i].args[j].val;
 
       if (v->type == VType::FLOAT) {
         if (k->compare(ckey) == 0) {
@@ -92,13 +93,13 @@ float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb) {
 }
 
 template <>
-bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb) {
+bool *DD_CallBackBuff::get_callback_val<bool>(const char *ckey) {
   Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
-  for (unsigned i = 0; i < cb.num_events; i++) {
-    for (unsigned j = 0; j < cb.buffer[i].active; j++) {
-      k = &cb.buffer[i].args[j].key;
-      v = &cb.buffer[i].args[j].val;
+  for (unsigned i = 0; i < num_events; i++) {
+    for (unsigned j = 0; j < buffer[i].active; j++) {
+      k = &buffer[i].args[j].key;
+      v = &buffer[i].args[j].val;
 
       if (v->type == VType::BOOL) {
         if (k->compare(ckey) == 0) {
@@ -111,14 +112,13 @@ bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb) {
 }
 
 template <>
-const char *get_callback_val<const char>(const char *ckey,
-                                         DD_CallBackBuff &cb) {
+const char *DD_CallBackBuff::get_callback_val<const char>(const char *ckey) {
   Varying<32> *v = nullptr;
   cbuff<32> *k = nullptr;
-  for (unsigned i = 0; i < cb.num_events; i++) {
-    for (unsigned j = 0; j < cb.buffer[i].active; j++) {
-      k = &cb.buffer[i].args[j].key;
-      v = &cb.buffer[i].args[j].val;
+  for (unsigned i = 0; i < num_events; i++) {
+    for (unsigned j = 0; j < buffer[i].active; j++) {
+      k = &buffer[i].args[j].key;
+      v = &buffer[i].args[j].val;
 
       if (v->type == VType::STRING) {
         if (k->compare(ckey) == 0) {
@@ -130,12 +130,56 @@ const char *get_callback_val<const char>(const char *ckey,
   return nullptr;
 }
 
-void clear_callbackbuff(DD_CallBackBuff &cb) {
-  for (unsigned i = 0; i < cb.num_events; i++) {
-    cb.buffer[i].active = 0;
-    cb.buffer[i].handle = "";
+void DD_CallBackBuff::clear_callbackbuff() {
+  for (unsigned i = 0; i < num_events; i++) {
+    buffer[i].active = 0;
+    buffer[i].handle = "";
   }
-  cb.num_events = 0;
+  num_events = 0;
+}
+
+template <>
+int *DD_FuncBuff::get_func_val<int>(const char *ckey) {
+  for (unsigned i = 0; i < num_args; i++) {
+    bool param_check = buffer[i].arg_name.compare(ckey) == 0;
+    if (param_check && buffer[i].arg.type == VType::INT) {
+      return &buffer[i].arg.v_int;
+    }
+  }
+  return nullptr;
+}
+
+template <>
+float *DD_FuncBuff::get_func_val<float>(const char *ckey) {
+  for (unsigned i = 0; i < num_args; i++) {
+    bool param_check = buffer[i].arg_name.compare(ckey) == 0;
+    if (param_check && buffer[i].arg.type == VType::FLOAT) {
+      return &buffer[i].arg.v_float;
+    }
+  }
+  return nullptr;
+}
+
+template <>
+bool *DD_FuncBuff::get_func_val<bool>(const char *ckey) {
+  for (unsigned i = 0; i < num_args; i++) {
+    bool param_check = buffer[i].arg_name.compare(ckey) == 0;
+    if (param_check && buffer[i].arg.type == VType::BOOL) {
+      return &buffer[i].arg.v_bool;
+    }
+  }
+  return nullptr;
+}
+
+template <>
+const char *DD_FuncBuff::get_func_val<const char>(const char *ckey) {
+  for (unsigned i = 0; i < num_args; i++) {
+    bool param_check = buffer[i].arg_name.compare(ckey) == 0;
+    if (param_check && buffer[i].arg.type == VType::STRING) {
+      return buffer[i].arg.v_strptr.str();
+    }
+  }
+  return nullptr;
 }
 
 bool check_stack_nil(lua_State *L, int idx) {
@@ -212,12 +256,19 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx) {
   }
 }
 
-DD_LEvent *DD_CallBackBuff::getNewEvent() {
+DD_LEvent *DD_CallBackBuff::get_new_event() {
   if (num_events == MAX_CALLBACK_EVENTS) {
     return nullptr;
   }
-
   unsigned idx = num_events++;
+  return &buffer[idx];
+}
+
+DD_LFuncArg *DD_FuncBuff::get_next_arg() {
+  if (num_args == MAX_CALLBACK_EVENTS) {
+    return nullptr;
+  }
+  unsigned idx = num_args++;
   return &buffer[idx];
 }
 
@@ -261,7 +312,8 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
     lua_pop(L, 1);
   };
 
-  DD_LEvent out;
+  // reset buffer and check class
+  cb.clear_callbackbuff();
   bool lclass_flag = lclass && *lclass;
 
   // find lua class, func, and set class as argument (self)
@@ -303,22 +355,27 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
   }
 
   // get returned events and fill buffer
-  parse_callbacks(L, cb);
+  parse_lua_events(L, cb);
 }
 
-void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
-                  int func_ref, int global_ref) {
-  /// \brief quick print out error func
+void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
+                  int global_ref, DD_CallBackBuff *cb, DD_FuncBuff *fb) {
+  /// \brief print out error func
   int err_num = 0;
   auto handle_error = [&]() {
     fprintf(stderr, "callback_lua::%s\n", lua_tostring(L, -1));
     lua_pop(L, 1);
   };
 
-  DD_LEvent out;
+  // reset buffer
+  if (cb) {
+    cb->clear_callbackbuff();
+  } else if (fb) {
+    fb->num_args = 0;
+  }
 
   // retrieve function
-  if (global_ref) {
+  if (global_ref > 0) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, func_ref);
     if (check_stack_nil(L, -1)) {
       printf("<%d> class function doesn't exist.\n", func_ref);
@@ -354,7 +411,11 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
   }
 
   // get returned events and fill buffer
-  parse_callbacks(L, cb);
+  if (cb) {
+    parse_lua_events(L, *cb);
+  } else if (fb) {
+    parse_lua_events(L, *fb);
+  }
 }
 
 void stack_dump(lua_State *L) {
@@ -384,8 +445,23 @@ void stack_dump(lua_State *L) {
   printf("\n"); /* end the listing */
 }
 
-void parse_callbacks(lua_State *L, DD_CallBackBuff &cb) {
-  parse_lua_events(L, cb);
+void parse_lua_events(lua_State *L, DD_FuncBuff &fb) {
+  fb.num_args = 0;
+  // events must be in the form of a table
+  int top = lua_gettop(L); /* number of events */
+  // printf("# of returns: %d\n", top);
+  for (int i = 1; i <= top; i++) {
+    int t = lua_type(L, i);
+    switch (t) {
+      case LUA_TTABLE: {
+        parse_table(L, &fb);
+        lua_pop(L, 1);  // Pop table
+        break;
+      }
+      default:
+        break;
+    }
+  }
 }
 
 void parse_lua_events(lua_State *L, DD_CallBackBuff &cb) {
@@ -395,20 +471,8 @@ void parse_lua_events(lua_State *L, DD_CallBackBuff &cb) {
   for (int i = 1; i <= top; i++) {
     int t = lua_type(L, i);
     switch (t) {
-      case LUA_TSTRING: {
-        // skip
-        break;
-      }
-      case LUA_TBOOLEAN: {
-        // skip
-        break;
-      }
-      case LUA_TNUMBER: {
-        // skip
-        break;
-      }
       case LUA_TTABLE: {
-        DD_LEvent *levent = cb.getNewEvent();
+        DD_LEvent *levent = cb.get_new_event();
         if (levent) {
           parse_table(L, levent);
           // printf("\tEvent #%u\n", cb.num_events);
@@ -483,6 +547,71 @@ void parse_table(lua_State *L, DD_LEvent *levent, const int tabs) {
       }
       case LUA_TTABLE: {
         parse_table(L, levent, tabs + 1);
+        break;
+      }
+      default:
+        break;
+    }
+    lua_pop(L, 1);  // remove value
+  }
+}
+
+void parse_table(lua_State *L, DD_FuncBuff *fb, const int tabs) {
+  lua_pushnil(L);                 // push key on stack for table access
+  while (lua_next(L, -2) != 0) {  // adds value to the top of the stack
+    DD_LFuncArg *f_arg = fb->get_next_arg();
+    int t = lua_type(L, -1);  // get value type
+    switch (t) {
+      case LUA_TSTRING: {
+        _val.format("%s", lua_tostring(L, -1));
+        lua_pushvalue(L, -2);  // copy the key
+        _key.format("%s", lua_tostring(L, -1));
+        lua_pop(L, 1);  // remove copy key
+
+        if (f_arg) {
+          f_arg->arg_name = _key.str();
+          f_arg->arg.type = VType::STRING;
+          f_arg->arg.v_strptr = _val.str();
+        }
+        break;
+      }
+      case LUA_TBOOLEAN: {
+        bool lbool = lua_toboolean(L, -1);
+        lua_pushvalue(L, -2);  // copy the key
+        _key.format("%s", lua_tostring(L, -1));
+        lua_pop(L, 1);  // remove copy key
+
+        if (f_arg) {
+          f_arg->arg_name = _key.str();
+          f_arg->arg.type = VType::BOOL;
+          f_arg->arg.v_bool = lbool;
+        }
+        break;
+      }
+      case LUA_TNUMBER: {
+        if (lua_isinteger(L, -1)) {
+          int val = (int)lua_tointeger(L, -1);
+          lua_pushvalue(L, -2);  // copy the key
+          _key.format("%s", lua_tostring(L, -1));
+          lua_pop(L, 1);  // remove copy key
+
+          if (f_arg) {
+            f_arg->arg_name = _key.str();
+            f_arg->arg.type = VType::INT;
+            f_arg->arg.v_int = val;
+          }
+        } else {
+          float val = (float)lua_tonumber(L, -1);
+          lua_pushvalue(L, -2);  // copy the key
+          _key.format("%s", lua_tostring(L, -1));
+          lua_pop(L, 1);  // remove copy key
+
+          if (f_arg) {
+            f_arg->arg_name = _key.str();
+            f_arg->arg.type = VType::FLOAT;
+            f_arg->arg.v_float = val;
+          }
+        }
         break;
       }
       default:

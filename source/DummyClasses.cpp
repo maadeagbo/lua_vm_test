@@ -23,37 +23,38 @@ bool DD_SimpleQueue::push(DD_LEvent &levent) {
 }
 
 int DD_ResourceBin::add_new_agent(lua_State *L) {
-  parse_lua_events(L, cb_events);
+  parse_lua_events(L, arg_buffer);
   // check if agent name exists then do add procedure
-  const char *s_val = get_callback_val<const char>("agent.name", cb_events);
+  const char *s_val = arg_buffer.get_func_val<const char>("agent.name");
   if (s_val) {
     int a_idx = num_agents;
     num_agents += 1;
     agents[a_idx].name = s_val;
     // printf("%s\n", s_val);
 
-    float *f_val = get_callback_val<float>("agent.pos.x", cb_events);
+    float *f_val = arg_buffer.get_func_val<float>("agent.pos.x");
     if (f_val) {
       agents[a_idx].position[0] = *f_val;
     }
 
-    f_val = get_callback_val<float>("agent.pos.y", cb_events);
+    f_val = arg_buffer.get_func_val<float>("agent.pos.y");
     if (f_val) {
       agents[a_idx].position[1] = *f_val;
     }
 
-    f_val = get_callback_val<float>("agent.pos.z", cb_events);
+    f_val = arg_buffer.get_func_val<float>("agent.pos.z");
     if (f_val) {
       agents[a_idx].position[2] = *f_val;
     }
 
-    bool *b_val = get_callback_val<bool>("agent.alive", cb_events);
+    bool *b_val = arg_buffer.get_func_val<bool>("agent.alive");
     if (b_val) {
       agents[a_idx].alive = *b_val;
     }
+  } else {
+    printf("Nope\n");
   }
 
-  clear_callbackbuff(cb_events);
   return 0;
 }
 

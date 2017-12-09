@@ -54,6 +54,7 @@ void check_sizes() {
   printf("DD_LEvent data: %u B\n", (unsigned)sizeof(DD_LEvent));
   printf("DD_Queue data: %u B\n", (unsigned)sizeof(DD_SimpleQueue));
   printf("DD_CallBackBuff data: %u B\n", (unsigned)sizeof(DD_CallBackBuff));
+  printf("DD_FuncBuff data: %u B\n", (unsigned)sizeof(DD_FuncBuff));
 }
 
 void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
@@ -64,13 +65,12 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
 
   callback_lua(L, levent, _q->cb_events, "generate_levels");
   print_callbackbuff(_q->cb_events);
-  const char *lvl_1 = get_callback_val<const char>("lvl_1", _q->cb_events);
+  const char *lvl_1 = _q->cb_events.get_callback_val<const char>("lvl_1");
 
   if (!lvl_1) {
     return;
   }
   lvl_found = lvl_1;
-  clear_callbackbuff(_q->cb_events);
   // reuse event to test update
   levent.handle = "post";
   levent.active = 0;
@@ -83,7 +83,6 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
 
   // invoke init function
   callback_lua(L, levent, _q->cb_events, "init", lvl_found.str());
-  clear_callbackbuff(_q->cb_events);
 
   int class_ref = get_lua_ref(L, "", lvl_found.str());
   int func_ref = get_lua_ref(L, lvl_found.str(), "update");
@@ -92,7 +91,6 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
   // change event
   add_arg_LEvent<float>(&levent, "test_float", 151515.f);
   levent.active++;
-  callback_lua(L, levent, _q->cb_events, func_ref, class_ref);
+  callback_lua(L, levent, func_ref, class_ref, &_q->cb_events);
   print_callbackbuff(_q->cb_events);
-  clear_callbackbuff(_q->cb_events);
 }

@@ -44,12 +44,6 @@ struct DD_LEvent {
   unsigned priority_timer[2] = {0, 0};
 };
 
-/// \brief Data type for passing function arguments to C++ from Lua
-struct DD_LFuncArg {
-  cbuff<32> arg_name;
-  Varying<256> arg;
-};
-
 /// \brief Add argument to DD_LEvent
 template <typename T>
 bool add_arg_LEvent(DD_LEvent *levent, const char *key, T arg) {
@@ -69,23 +63,57 @@ bool add_arg_LEvent<const char *>(DD_LEvent *levent, const char *key,
 /// \brief Buffer to hold evens from callback function
 struct DD_CallBackBuff {
   /// \brief Get new event from buffer (return nullptr if buffer is full)
-  DD_LEvent *getNewEvent();
+  DD_LEvent *get_new_event();
+  /// \brief Parse DD_CallBackBuff arguments to into values
+  template <typename T>
+  T *get_callback_val(const char *ckey) {
+    return nullptr;
+  }
+
+  /// \brief resets DD_CallBackBuff
+  void clear_callbackbuff();
 
   DD_LEvent buffer[MAX_CALLBACK_EVENTS];
   unsigned num_events = 0;
 };
 
+template <>
+const char *DD_CallBackBuff::get_callback_val<const char>(const char *ckey);
+template <>
+bool *DD_CallBackBuff::get_callback_val<bool>(const char *ckey);
+template <>
+float *DD_CallBackBuff::get_callback_val<float>(const char *ckey);
+template <>
+int *DD_CallBackBuff::get_callback_val<int>(const char *ckey);
+
+/// \brief Data type for passing function arguments to C++ from Lua
+struct DD_LFuncArg {
+  cbuff<32> arg_name;
+  Varying<256> arg;
+};
+
 /// \brief Buffer to hold arguments from Lua invocations of C++ functions
 struct DD_FuncBuff {
   /// \brief Get empty argument from buffer (return nullptr if buffer is full)
-  DD_LFuncArg *getNextArg();
+  DD_LFuncArg *get_next_arg();
+  /// \brief return DD_FuncArgs values
+  template <typename T>
+  T *get_func_val(const char *ckey) {
+    return nullptr;
+  }
 
   DD_LFuncArg buffer[MAX_CALLBACK_EVENTS];
-  unsigned num_events = 0;
+  unsigned num_args = 0;
 };
 
-/// \brief resets DD_CallBackBuff
-void clear_callbackbuff(DD_CallBackBuff &cb);
+template <>
+int *DD_FuncBuff::get_func_val<int>(const char *ckey);
+template <>
+float *DD_FuncBuff::get_func_val<float>(const char *ckey);
+template <>
+bool *DD_FuncBuff::get_func_val<bool>(const char *ckey);
+template <>
+const char *DD_FuncBuff::get_func_val<const char>(const char *ckey);
 
 /// \brief Initialize Lua VM
 lua_State *init_lua_state();
@@ -130,8 +158,9 @@ void callback_lua(lua_State *L, const DD_LEvent &event, DD_CallBackBuff &cb,
                   const char *func, const char *lclass = "");
 
 /// \brief Envoke lua callback function with lua_ref pointer
-void callback_lua(lua_State *L, const DD_LEvent &event, DD_CallBackBuff &cb,
-                  int func_ref, int global_ref = LUA_REFNIL);
+void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
+                  int global_ref = LUA_REFNIL, DD_CallBackBuff *cb = nullptr,
+                  DD_FuncBuff *fb = nullptr);
 
 /// \brief Push event arguments onto the stack
 void push_args(lua_State *L, const DD_LEvent &levent, const int idx);
@@ -139,14 +168,17 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx);
 /// \brief Dump stack
 void stack_dump(lua_State *L);
 
-/// \brief Get returned events from callbacks
-void parse_callbacks(lua_State *L, DD_CallBackBuff &cb);
-
-/// \brief Parse all events from callbacks
+/// \brief Parse all events to callback buffer
 void parse_lua_events(lua_State *L, DD_CallBackBuff &cb);
+
+/// \brief Parse all events to function argument buffer
+void parse_lua_events(lua_State *L, DD_FuncBuff &fb);
 
 /// \brief Parse table into DD_LEvent
 void parse_table(lua_State *L, DD_LEvent *levent, const int tabs = 0);
+
+/// \brief Parse table into DD_LEvent
+void parse_table(lua_State *L, DD_FuncBuff *fb, const int tabs = 0);
 
 /// \brief Print tables for returned events (debug)
 void print_table(lua_State *L, const int tabs = 0);
@@ -159,18 +191,3 @@ int get_lua_ref(lua_State *L, const char *lclass, const char *func);
 
 /// \brief Clear function reference
 void clear_lua_ref(lua_State *L, int func_ref);
-
-/// \brief Parse DD_CallBackBuff arguments to into values
-template <typename T>
-T *get_callback_val(const char *ckey, DD_CallBackBuff &cb) {
-  return nullptr;
-}
-
-template <>
-const char *get_callback_val<const char>(const char *ckey, DD_CallBackBuff &cb);
-template <>
-bool *get_callback_val<bool>(const char *ckey, DD_CallBackBuff &cb);
-template <>
-float *get_callback_val<float>(const char *ckey, DD_CallBackBuff &cb);
-template <>
-int *get_callback_val<int>(const char *ckey, DD_CallBackBuff &cb);

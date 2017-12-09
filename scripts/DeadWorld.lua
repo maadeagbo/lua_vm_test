@@ -51,7 +51,7 @@ do
                 if k == "test_float" then print("Deadworld out val: "..v) end
             end
             e = {}
-            e["event_id"] = "DeadWorld post called\n"
+            e["event_id"] = "DeadWorld post called"
             return e
         end
         return { 0 }

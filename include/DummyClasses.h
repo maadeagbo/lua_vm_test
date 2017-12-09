@@ -29,6 +29,7 @@ struct DD_ResourceBin {
 
   dd_array<DummyAgent> agents;
   DD_CallBackBuff cb_events;
+  DD_FuncBuff arg_buffer;
   unsigned num_agents = 0;
 
   int add_new_agent(lua_State *L);
