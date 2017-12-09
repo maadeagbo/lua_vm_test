@@ -664,7 +664,6 @@ void print_table(lua_State *L, const int tabs) {
 
 int get_lua_ref(lua_State *L, const char *lclass, const char *func) {
   bool lclass_flag = lclass && *lclass;
-  bool not_found = true;
 
   if (lclass_flag) {  // find class function
     lua_getglobal(L, lclass);
