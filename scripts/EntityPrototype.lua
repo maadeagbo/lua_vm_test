@@ -29,7 +29,7 @@ do
         -- body
     end
 
-    function Entity:update( event )
+    function Entity:update( event, args, num_args )
         -- body
     end
 
