@@ -6,32 +6,18 @@ local inputs =
 }
 
 function generate_levels( event, args, num_args )
-
-    -- create a list of valid levels
+-- creates a list of found level scripts
     levels = {}
-    levels["event_id"] = "lvls_found"
-
-    num_lvls = 0; dir_str = ""
-    if (event == "io" and num_args == 1) then
-        for k,v in pairs(args) do 
-			if (v ~= "bam_bam") then
-                print("IO event incorrect: "..v)
-            end
-		end 
+    for i,v in ipairs(inputs) do
+				filename = string.format( "%sscripts/%s.lua", ROOT_DIR, v)
+				_file = io.open(filename)					-- check file exists
+				if _file then 
+						levels[#levels + 1] = v -- add to output
+				else
+						if not _file then print("Not found: "..filename) end
+				end
     end
-    for i,v in pairs(inputs) do
-        filename = string.format( "%s%s.lua", SCRIPTS_DIR, v)
-        _file = io.open(filename)
-        -- add to output if found
-        if _file then 
-            num_lvls = num_lvls + 1
-            idx = string.format( "lvl_%d", num_lvls)
-            levels[idx] = v -- add to output
-        end
-        if _file == nil then 
-            print(string.format("Not found: %s", v))
-        end
-    end
+    levels["num_levels"] = #levels
     --[[
         print("Level scripts found:")
         for i,v in pairs(levels) do

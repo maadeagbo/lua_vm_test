@@ -8,8 +8,7 @@ do
         alive = true,
         health = 10.0,
         armour = 3.0,
-        dmg = 3.0,
-		callbacks = { "update" }
+        dmg = 3.0
     }
 
     Hero = base_agent:new(hero_params)
@@ -26,8 +25,8 @@ do
     end
 
     function Hero:update( event )
-        -- body
-		print("I have been ENVOKED")
+      -- body
+			print("I have been ENVOKED")
     end
 
     return Hero

@@ -23,18 +23,20 @@ do
 	end
 
     function DeadWorld:init( map )
-		-- spawn hero
-		print("Deadworld init called\n")
-		main_character.position = { 0.0, 1.0, -2.0 }
-		main_character.alive = true
-		create_agent(main_character)
+			-- spawn hero
+			print("Deadworld init called\n")
+			main_character.position = { 0.0, 1.0, -2.0 }
+			main_character.alive = true
+			create_agent(main_character)
+			register_update_func(main_character);
 
-        -- spawn some monsters
-        for i=1,5 do
-            new_name = string.format("monster_%d",i)
-            enemies[i] = base_monster:new({name = new_name, alive = true})
-			create_agent(enemies[i])
-        end
+      -- spawn some monsters
+      for i=1,5 do
+        new_name = string.format("monster_%d", #enemies)
+        enemies[#enemies + 1] = base_monster:new({name = new_name, alive = true})
+				create_agent(enemies[i])
+				register_update_func(enemies[i]);
+      end
     end
 
     function DeadWorld:world_status()
