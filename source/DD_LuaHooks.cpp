@@ -122,6 +122,7 @@ const char* get_arg_LEvent<const char>(DD_LEvent *levent, const char *key) {
 	return nullptr;
 }
 
+/*
 template <>
 int *DD_CallBackBuff::get_callback_val<int>(const char *ckey) {
   Varying<32> *v = nullptr;
@@ -189,6 +190,7 @@ const char *DD_CallBackBuff::get_callback_val<const char>(const char *ckey) {
   }
   return nullptr;
 }
+//*/
 
 template <>
 int *DD_FuncBuff::get_func_val<int>(const char *ckey) {
@@ -237,6 +239,7 @@ const char *DD_FuncBuff::get_func_val<const char>(const char *ckey) {
 // ********************************************************************
 // ********************************************************************
 
+/*
 void DD_CallBackBuff::clear_callbackbuff() {
 	for (unsigned i = 0; i < num_events; i++) {
 		buffer[i].active = 0;
@@ -244,6 +247,7 @@ void DD_CallBackBuff::clear_callbackbuff() {
 	}
 	num_events = 0;
 }
+//*/
 
 bool check_stack_nil(lua_State *L, int idx) {
   if (lua_type(L, idx) == LUA_TNIL) {
@@ -316,22 +320,25 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx) {
   }
 }
 
+/*
 DD_LEvent *DD_CallBackBuff::get_new_event() {
-  if (num_events == MAX_CALLBACK_EVENTS) {
+  if (num_events == MAX_ARG_BUFFER_SIZE) {
     return nullptr;
   }
   unsigned idx = num_events++;
   return &buffer[idx];
 }
+//*/
 
 DD_LFuncArg *DD_FuncBuff::get_next_arg() {
-  if (num_args == MAX_CALLBACK_EVENTS) {
+  if (num_args == MAX_ARG_BUFFER_SIZE) {
     return nullptr;
   }
   unsigned idx = num_args++;
   return &buffer[idx];
 }
 
+/*
 void print_callbackbuff(DD_CallBackBuff &cb) {
   for (unsigned i = 0; i < cb.num_events; i++) {
     printf("Event: %s\n", cb.buffer[i].handle.str());
@@ -357,6 +364,7 @@ void print_callbackbuff(DD_CallBackBuff &cb) {
     }
   }
 }
+//*/
 
 void register_callback_lua(lua_State *L, const char *func_sig,
                            lua_CFunction _func) {
@@ -420,8 +428,8 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, DD_CallBackBuff &cb,
 }
 //*/
 
-void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
-                  int global_ref, DD_CallBackBuff *cb, DD_FuncBuff *fb) {
+void callback_lua(lua_State *L, const DD_LEvent &levent, DD_FuncBuff &fb,
+									int func_ref, int global_ref) {
   /// \brief print out error func
   int err_num = 0;
   auto handle_error = [&]() {
@@ -430,11 +438,7 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
   };
 
   // reset buffer
-  if (cb) {
-    cb->clear_callbackbuff();
-  } else if (fb) {
-    fb->num_args = 0;
-  }
+	fb.num_args = 0;
 
   // retrieve function
   if (global_ref > 0) {
@@ -472,13 +476,8 @@ void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
     handle_error();
   }
 
-	stack_dump(L);
   // get returned events and fill buffer
-  if (cb) {
-    parse_lua_events(L, *cb);
-  } else if (fb) {
-    parse_lua_events(L, *fb);
-  }
+	parse_lua_events(L, fb);
 }
 
 void stack_dump(lua_State *L) {
@@ -529,9 +528,10 @@ void parse_lua_events(lua_State *L, DD_FuncBuff &fb) {
   }
 }
 
+/*
 void parse_lua_events(lua_State *L, DD_CallBackBuff &cb) {
   // events must be in the form of a table
-  int top = lua_gettop(L); /* number of events */
+  int top = lua_gettop(L); // number of events
   // printf("# of returns: %d\n", top);
   for (int i = 1; i <= top; i++) {
     int t = lua_type(L, i);
@@ -554,6 +554,7 @@ void parse_lua_events(lua_State *L, DD_CallBackBuff &cb) {
   }
   // printf("# of events parsed: %u\n", cb.num_events);
 }
+//*/
 
 void parse_table(lua_State *L, DD_LEvent *levent, const int tabs) {
   lua_pushnil(L);                 // push key on stack for table access
@@ -732,6 +733,29 @@ void print_table(lua_State *L, const int tabs) {
     lua_pop(L, 1);  // remove value
   }
   // printf("<--%d\t", tabs); stack_dump(L);			// check exit
+}
+
+void print_buffer(DD_FuncBuff & fb) {
+	for (unsigned i = 0; i < fb.num_args; i++) {
+		cbuff<32> &k = fb.buffer[i].arg_name;
+		Varying<256> &v = fb.buffer[i].arg;
+		switch (v.type) {
+			case VType::BOOL:
+				printf("\t%s : %s\n", k.str(), v.v_bool ? "true" : "false");
+				break;
+			case VType::FLOAT:
+				printf("\t%s : %.3f\n", k.str(), v.v_float);
+				break;
+			case VType::INT:
+				printf("\t%s : %d\n", k.str(), v.v_int);
+				break;
+			case VType::STRING:
+				printf("\t%s : %s\n", k.str(), v.v_strptr.str());
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 int get_lua_ref(lua_State *L, const char *lclass, const char *func) {

@@ -18,7 +18,7 @@ struct DD_SimpleQueue {
   unsigned q_size = 0;
   unsigned q_head = 0;
   unsigned q_tail = 0;
-  DD_CallBackBuff cb_events;
+  DD_FuncBuff fbuffer;
 
   bool push(DD_LEvent &levent);
   bool pop(DD_LEvent &levent);
@@ -28,7 +28,6 @@ struct DD_ResourceBin {
   DD_ResourceBin() : agents(100) {}
 
   dd_array<DummyAgent> agents;
-  DD_CallBackBuff cb_events;
   DD_FuncBuff arg_buffer;
   unsigned num_agents = 0;
 

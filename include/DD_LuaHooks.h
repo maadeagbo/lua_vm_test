@@ -9,7 +9,7 @@ extern "C" {
 #include "lualib.h"
 }
 
-#define MAX_CALLBACK_EVENTS 10
+#define MAX_ARG_BUFFER_SIZE 10
 #define MAX_EVENT_ARGS 8
 
 /// \brief class for parsing Varying data struct
@@ -78,6 +78,7 @@ bool* get_arg_LEvent<bool>(DD_LEvent *levent, const char *key);
 template <>
 const char* get_arg_LEvent<const char>(DD_LEvent *levent, const char *key);
 
+/*
 /// \brief Buffer to hold evens from callback function
 struct DD_CallBackBuff {
   /// \brief Get new event from buffer (return nullptr if buffer is full)
@@ -91,7 +92,7 @@ struct DD_CallBackBuff {
   /// \brief resets DD_CallBackBuff
   void clear_callbackbuff();
 
-  DD_LEvent buffer[MAX_CALLBACK_EVENTS];
+  DD_LEvent buffer[MAX_ARG_BUFFER_SIZE];
   unsigned num_events = 0;
 };
 
@@ -103,8 +104,9 @@ template <>
 float *DD_CallBackBuff::get_callback_val<float>(const char *ckey);
 template <>
 int *DD_CallBackBuff::get_callback_val<int>(const char *ckey);
+//*/
 
-/// \brief Data type for passing function arguments to C++ from Lua
+/// \brief Data type for passing information between C++ and Lua
 struct DD_LFuncArg {
   cbuff<32> arg_name;
   Varying<256> arg;
@@ -120,7 +122,7 @@ struct DD_FuncBuff {
     return nullptr;
   }
 
-  DD_LFuncArg buffer[MAX_CALLBACK_EVENTS];
+  DD_LFuncArg buffer[MAX_ARG_BUFFER_SIZE];
   unsigned num_args = 0;
 };
 
@@ -178,9 +180,8 @@ bool parse_luafile(lua_State *L, const char *filename);
 //                  const char *func, const char *lclass = "");
 
 /// \brief Envoke lua callback function with lua_ref pointer
-void callback_lua(lua_State *L, const DD_LEvent &levent, int func_ref,
-                  int global_ref = LUA_REFNIL, DD_CallBackBuff *cb = nullptr,
-                  DD_FuncBuff *fb = nullptr);
+void callback_lua(lua_State *L, const DD_LEvent &levent, DD_FuncBuff &fb,
+									int func_ref, int global_ref = LUA_REFNIL);
 
 /// \brief Push event arguments onto the stack
 void push_args(lua_State *L, const DD_LEvent &levent, const int idx);
@@ -189,7 +190,7 @@ void push_args(lua_State *L, const DD_LEvent &levent, const int idx);
 void stack_dump(lua_State *L);
 
 /// \brief Parse all events to callback buffer
-void parse_lua_events(lua_State *L, DD_CallBackBuff &cb);
+//void parse_lua_events(lua_State *L, DD_CallBackBuff &cb);
 
 /// \brief Parse all events to function argument buffer
 void parse_lua_events(lua_State *L, DD_FuncBuff &fb);
@@ -203,8 +204,9 @@ void parse_table(lua_State *L, DD_FuncBuff *fb, const int tabs = 0);
 /// \brief Print tables for returned events (debug)
 void print_table(lua_State *L, const int tabs = 0);
 
-/// \brief Print out contents of DD_CallbackBuff
-void print_callbackbuff(DD_CallBackBuff &cb);
+/// \brief Print out contents of buffer
+//void print_callbackbuff(DD_CallBackBuff &cb);
+void print_buffer(DD_FuncBuff &fb);
 
 /// \brief Store and return handle to lua function
 /// \return Integer handle to function or class

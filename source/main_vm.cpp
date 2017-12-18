@@ -55,10 +55,10 @@ int main(const int argv, const char **argc) {
 
 void check_sizes() {
   printf("Varying<32> data: %u B\n", (unsigned)sizeof(Varying<32>));
-  printf("Varying<128> data: %u B\n", (unsigned)sizeof(Varying<128>));
+  printf("Varying<256> data: %u B\n", (unsigned)sizeof(Varying<256>));
   printf("DD_LEvent data: %u B\n", (unsigned)sizeof(DD_LEvent));
   printf("DD_Queue data: %u B\n", (unsigned)sizeof(DD_SimpleQueue));
-  printf("DD_CallBackBuff data: %u B\n", (unsigned)sizeof(DD_CallBackBuff));
+  //printf("DD_CallBackBuff data: %u B\n", (unsigned)sizeof(DD_CallBackBuff));
   printf("DD_FuncBuff data: %u B\n", (unsigned)sizeof(DD_FuncBuff));
 }
 
@@ -69,9 +69,9 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
   add_arg_LEvent<const char *>(&levent, "file", "bam_bam");
 
 	int gen_func = get_lua_ref(L, nullptr, "generate_levels");
-  callback_lua(L, levent, gen_func, -1, &_q->cb_events);
-  print_callbackbuff(_q->cb_events);
-  const char *lvl_1 = _q->cb_events.get_callback_val<const char>("1");
+  callback_lua(L, levent, _q->fbuffer, gen_func, -1);
+  print_buffer(_q->fbuffer);
+  const char *lvl_1 = _q->fbuffer.get_func_val<const char>("1");
 
   if (!lvl_1) {
     return;
@@ -90,7 +90,7 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
   // invoke init function
 	int class_ref = get_lua_ref(L, "", lvl_found.str());
 	int func_ref = get_lua_ref(L, lvl_found.str(), "init");
-	callback_lua(L, levent, func_ref, class_ref, &_q->cb_events);
+	callback_lua(L, levent, _q->fbuffer, func_ref, class_ref);
   //callback_lua(L, levent, _q->cb_events, "init", lvl_found.str());
 
   func_ref = get_lua_ref(L, lvl_found.str(), "update");
@@ -99,7 +99,7 @@ void run_startup(lua_State *L, const char *dir, DD_SimpleQueue *_q) {
   // change event
   add_arg_LEvent<float>(&levent, "test_float", 151515.f);
   levent.active++;
-  callback_lua(L, levent, func_ref, class_ref, &_q->cb_events);
+  callback_lua(L, levent, _q->fbuffer, func_ref, class_ref);
   //print_callbackbuff(_q->cb_events);
 }
 
